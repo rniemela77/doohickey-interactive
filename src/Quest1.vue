@@ -5,11 +5,15 @@
         </div>
 
         <div class="control-panel">
-            <WaveChart :control-position="controlPosition" :goal-position="goalPosition" />
+            <div class="border">
+                <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
+            </div>
 
-            x:{{ controlPosition.x }} y:{{ controlPosition.y }}
+            <!-- x:{{ controlPosition.x }} y:{{ controlPosition.y }} -->
 
-            <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
+            <div class="border">
+                <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
+            </div>
         </div>
     </div>
 </template>
@@ -21,6 +25,8 @@ import TrackPad from './components/TrackPad.vue'
 
 const controlPosition = ref({ x: 0, y: 0 })
 const goalPosition = ref({ x: -30, y: 30 })
+const speed = ref(0.3);
+const maxSpeed = 1.5;
 
 const handleControlPositionChange = (newPosition) => {
     controlPosition.value = newPosition
@@ -28,11 +34,11 @@ const handleControlPositionChange = (newPosition) => {
 
 
 let isFinished = ref(false)
-const goalTotal = 25;
+const goalTotal = 5;
 // every 100ms, check if the control position is within 5px of the goal position
 const checkIfFinished = () => {
     if (isFinished.value) return;
-    
+
     if (Math.abs(controlPosition.value.x - goalPosition.value.x) < goalTotal && Math.abs(controlPosition.value.y - goalPosition.value.y) < goalTotal) {
         isFinished.value = true
         console.log('finished!');
@@ -52,8 +58,12 @@ const checkIfFinished = () => {
             const t = Math.min(1, elapsedTime / totalAnimationTime);
             const p = easeInOutCubic(t);
 
+            // ease to max speed over 3 seconds
+            speed.value = Math.min(maxSpeed, speed.value + (maxSpeed - speed.value) * (t / 6));
+
             controlPosition.value.x = startX + (goalPosition.value.x - startX) * p;
             controlPosition.value.y = startY + (goalPosition.value.y - startY) * p;
+
 
             if (t < 1) {
                 requestAnimationFrame(animate)
@@ -90,10 +100,14 @@ setInterval(checkIfFinished, 100)
     font-family: 'Courier New', monospace;
 }
 
+.border {
+    border: 1px solid red;
+}
+
 .control-panel {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    /* flex-direction: column; */
+    align-items: stretch;
     gap: 2rem;
 }
 </style>

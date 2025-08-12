@@ -31,14 +31,14 @@ import Quest1 from './Quest1.vue';
 
 <style>
 .container * {
-  border: 1px solid lab(87.82 -79.28 80.98 / 0.2);
+  /* border: 1px solid lab(87.82 -79.28 80.98 / 0.2); */
   /* padding: 1rem; */
 }
 
 .container {
   width: 100%;
   height: 100%;
-  border: 1px solid red;
+  /* border: 1px solid red; */
 }
 
 .row {

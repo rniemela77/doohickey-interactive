@@ -61,7 +61,7 @@ const normalizeOffset = (value) => {
 const backgroundPosition = computed(() => `${backgroundOffsetX.value}px ${backgroundOffsetY.value}px`)
 
 const step = (timestampMs) => {
-    if (!isDragging.value) return
+    if (!isDragging.value || props.disabled) return
 
     const dtSeconds = Math.max(0, (timestampMs - lastAnimationTimestampMs.value) / 1000)
     lastAnimationTimestampMs.value = timestampMs
@@ -131,9 +131,16 @@ const controlPosition = ref({ x: 0, y: 0 })
 </script>
 
 <style scoped>
+.hand-drag {
+    width: 100%;
+    height: 100%;
+    min-width: 15rem;
+    min-height: 15rem;
+}
 .track-pad {
-    height: 15rem;
-    width: 15rem;
+    width: 100%;
+    height: 100%;
+
 
     /* repeating css pattern */
     background-color: #2A2A2C;
