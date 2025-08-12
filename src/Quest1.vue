@@ -6,19 +6,24 @@
 
         <div class="control-panel">
             <transition-group name="fade">
-                <div class="border" v-if="showWaveChart">
-                    <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
+                <div class="border" v-if="state.showWaveChart">
+                    <WaveChart 
+                        :control-position="controlPosition" 
+                        :goal-position="goalPosition" 
+                        :speed="speed" 
+                    />
                 </div>
 
-                <blockquote class="quest-text" v-if="showQuestText">
+                <blockquote class="quest-text" v-if="state.showQuestText">
                     <div class="question-text-portrait"></div>
-                    <p>
-                        {{ questText }}
-                    </p>
+                    <p>{{ questText }}</p>
                 </blockquote>
 
-                <div class="border trackpad-border" v-if="showTrackPad">
-                    <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
+                <div class="border trackpad-border" v-if="state.showTrackPad">
+                    <TrackPad 
+                        @controlPositionChange="handleControlPositionChange" 
+                        :disabled="isFinished" 
+                    />
                 </div>
             </transition-group>
         </div>
@@ -30,70 +35,109 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import WaveChart from './components/WaveChart.vue'
 import TrackPad from './components/TrackPad.vue'
 
-// Constants
-const GOAL_POSITION = { x: -30, y: 30 }
-const GOAL_THRESHOLD = 3
-const CHECK_INTERVAL = 100
-const ANIMATION_DURATION = 3000
-const MAX_SPEED = 1.5
-const INITIAL_SPEED = 0.3
+// Configuration object for easy maintenance
+const QUEST_CONFIG = {
+    goal: { x: -30, y: 30 },
+    threshold: 3,
+    checkInterval: 100,
+    animation: {
+        duration: 3000,
+        maxSpeed: 1.5,
+        initialSpeed: 0.3
+    },
+    timing: {
+        waveChartDelay: 1000,
+        questTextDelay: 1500,
+        trackPadDelay: 3000,
+        questTextHideDelay: 1000,
+        finalDelay: 1000,
+        goalAnimationDelay: 2000,
+        completionDelay: 3000
+    },
+    messages: {
+        initial: 'The signal is weak- but you can fix it.',
+        completed: 'Signal locked. You\'re smarter than I thought.'
+    }
+}
+
+// Animation utilities
+const AnimationUtils = {
+    easeInOutCubic(t) {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2
+    },
+
+    async animateToGoal(startPosition, goalPosition, startSpeed, onUpdate, onComplete) {
+        const startTime = performance.now()
+        const { duration, maxSpeed } = QUEST_CONFIG.animation
+
+        return new Promise((resolve) => {
+            const animate = (now) => {
+                const elapsedTime = now - startTime
+                const progress = Math.min(1, elapsedTime / duration)
+                const easedProgress = this.easeInOutCubic(progress)
+
+                // Calculate current values
+                const currentSpeed = startSpeed + (maxSpeed - startSpeed) * easedProgress
+                const currentX = startPosition.x + (goalPosition.x - startPosition.x) * easedProgress
+                const currentY = startPosition.y + (goalPosition.y - startPosition.y) * easedProgress
+
+                // Update via callback
+                onUpdate({ x: currentX, y: currentY }, currentSpeed)
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate)
+                } else {
+                    // Ensure final values are exact
+                    onUpdate(goalPosition, maxSpeed)
+                    onComplete?.()
+                    resolve()
+                }
+            }
+
+            requestAnimationFrame(animate)
+        })
+    }
+}
+
+// Timing service for better async flow management
+const TimingService = {
+    async delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    },
+
+    async sequence(tasks) {
+        for (const task of tasks) {
+            await task()
+        }
+    }
+}
 
 // Reactive state
 const controlPosition = ref({ x: 0, y: 0 })
-const goalPosition = ref(GOAL_POSITION)
-const speed = ref(INITIAL_SPEED)
+const goalPosition = ref(QUEST_CONFIG.goal)
+const speed = ref(QUEST_CONFIG.animation.initialSpeed)
 const isFinished = ref(false)
-const questText = ref('The signal is weak- but you can fix it.')
+const questText = ref(QUEST_CONFIG.messages.initial)
+
+// Component state management
+const state = ref({
+    showWaveChart: false,
+    showQuestText: false,
+    showTrackPad: false
+})
+
 const emit = defineEmits(['questCompleted'])
 
 // Computed properties
 const isWithinGoalRange = computed(() => {
     const { x, y } = controlPosition.value
     const goal = goalPosition.value
+    const threshold = QUEST_CONFIG.threshold
 
-    return Math.abs(x - goal.x) < GOAL_THRESHOLD &&
-        Math.abs(y - goal.y) < GOAL_THRESHOLD
+    return Math.abs(x - goal.x) < threshold && Math.abs(y - goal.y) < threshold
 })
-
-// Animation utilities
-const easeInOutCubic = (t) => {
-    return t < 0.5
-        ? 4 * t * t * t
-        : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
-const animateToGoal = () => {
-    const startTime = performance.now()
-    const startX = controlPosition.value.x
-    const startY = controlPosition.value.y
-    const goalX = goalPosition.value.x
-    const goalY = goalPosition.value.y
-    const startSpeed = speed.value // Capture initial speed
-
-    const animate = (now) => {
-        const elapsedTime = now - startTime
-        const progress = Math.min(1, elapsedTime / ANIMATION_DURATION)
-        const easedProgress = easeInOutCubic(progress)
-
-        // Gradually increase speed from start speed to max speed over animation duration
-        speed.value = startSpeed + (MAX_SPEED - startSpeed) * easedProgress
-
-        // Update position with easing
-        controlPosition.value.x = startX + (goalX - startX) * easedProgress
-        controlPosition.value.y = startY + (goalY - startY) * easedProgress
-
-        if (progress < 1) {
-            requestAnimationFrame(animate)
-        } else {
-            // Snap exactly to goal at the end
-            controlPosition.value.x = goalX
-            controlPosition.value.y = goalY
-            speed.value = MAX_SPEED // Ensure final speed is exactly max
-        }
-    }
-
-    requestAnimationFrame(animate)
-}
 
 // Event handlers
 const handleControlPositionChange = (newPosition) => {
@@ -104,57 +148,77 @@ const handleControlPositionChange = (newPosition) => {
 const checkIfFinished = async () => {
     if (isFinished.value || !isWithinGoalRange.value) return
 
-    // lock trackpad
-    isFinished.value = true
+    try {
+        // Lock trackpad
+        isFinished.value = true
 
-    // show wave chart goal animation
-    animateToGoal()
+        // Animate to goal
+        await AnimationUtils.animateToGoal(
+            controlPosition.value,
+            goalPosition.value,
+            speed.value,
+            (position, newSpeed) => {
+                controlPosition.value = position
+                speed.value = newSpeed
+            }
+        )
 
-    await new Promise(resolve => setTimeout(resolve, 5000))
+        // Wait and show completion message
+        await TimingService.delay(QUEST_CONFIG.timing.goalAnimationDelay)
+        
+        state.value.showQuestText = true
+        questText.value = QUEST_CONFIG.messages.completed
 
-    // show completed quest text
-    showQuestText.value = true
-    questText.value = 'Signal locked. You\'re smarter than I thought.'
+        // Wait and complete quest
+        await TimingService.delay(QUEST_CONFIG.timing.completionDelay)
+        
+        // Hide components
+        state.value.showQuestText = false
+        state.value.showTrackPad = false
+        state.value.showWaveChart = false
 
-    await new Promise(resolve => setTimeout(resolve, 6000))
-
-    // showWaveChart.value = false
-    showQuestText.value = false
-    showTrackPad.value = false
-
-    //emit to parent to go to next quest
-    emit('questCompleted')
+        // Emit completion event
+        emit('questCompleted')
+    } catch (error) {
+        console.error('Error during quest completion:', error)
+        // Fallback: still complete the quest
+        emit('questCompleted')
+    }
 }
 
-// Lifecycle
+// Lifecycle management
 let checkInterval
 
-const showWaveChart = ref(false)
-const showQuestText = ref(false)
-const showTrackPad = ref(false)
+const initializeQuest = async () => {
+    try {
+        await TimingService.sequence([
+            async () => {
+                await TimingService.delay(QUEST_CONFIG.timing.waveChartDelay)
+                state.value.showWaveChart = true
+            },
+            async () => {
+                await TimingService.delay(QUEST_CONFIG.timing.questTextDelay)
+                state.value.showQuestText = true
+            },
+            async () => {
+                await TimingService.delay(QUEST_CONFIG.timing.trackPadDelay)
+                state.value.showTrackPad = true
+            },
+            async () => {
+                await TimingService.delay(QUEST_CONFIG.timing.questTextHideDelay)
+                state.value.showQuestText = false
+            },
+            async () => {
+                await TimingService.delay(QUEST_CONFIG.timing.finalDelay)
+                checkInterval = setInterval(checkIfFinished, QUEST_CONFIG.checkInterval)
+            }
+        ])
+    } catch (error) {
+        console.error('Error initializing quest:', error)
+    }
+}
 
-onMounted(async () => {
-    // wait 1s, then show wave chart
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    showWaveChart.value = true
-
-    // wait 1s, then show quest text
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    showQuestText.value = true
-
-    // wait 1s, then show track pad
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    showTrackPad.value = true
-
-    // wait 1s, then hide quest text
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // wait 2s, then hide quest text
-    showQuestText.value = false
-
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    checkInterval = setInterval(checkIfFinished, CHECK_INTERVAL)
-})
+onMounted(initializeQuest)
 
 onUnmounted(() => {
     if (checkInterval) {
