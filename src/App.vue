@@ -9,7 +9,7 @@
         </transition>
 
         <transition name="fade">
-            <div v-if="showQuest2">quest2</div>
+            <Quest2 v-if="showQuest2" />
         </transition>
         <!-- <BigRedText />
 
@@ -35,10 +35,11 @@
 import { ref } from 'vue';
 import Intro from './views/Intro.vue';
 import Quest1 from './views/Quest1.vue';
+import Quest2 from './views/Quest2.vue';
 
 const showIntro = ref(false); // should set to true
-const showQuest1 = ref(true);
-const showQuest2 = ref(false);
+const showQuest1 = ref(false);
+const showQuest2 = ref(true);
 
 function loadingComplete() {
     showIntro.value = false;
@@ -61,11 +62,6 @@ function questCompleted() {
 </script>
 
 <style>
-.container * {
-    /* border: 1px solid lab(87.82 -79.28 80.98 / 0.2); */
-    /* padding: 1rem; */
-}
-
 .container {
     width: 100vw;
     height: 100vh;
