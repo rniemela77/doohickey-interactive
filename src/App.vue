@@ -32,13 +32,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import Intro from './Intro.vue';
-import BigRedText from './components/BigRedText.vue'
-import KeypadControls from './components/KeypadControls.vue'
-import SliderControl from './components/SliderControl.vue';
-import KnobControl from './components/KnobControl.vue';
-import Quest1 from './Quest1.vue';
+import { ref } from 'vue';
+import Intro from './views/Intro.vue';
+import Quest1 from './views/Quest1.vue';
 
 const showIntro = ref(false); // should set to true
 const showQuest1 = ref(true);

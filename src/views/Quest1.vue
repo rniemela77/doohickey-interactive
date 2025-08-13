@@ -1,7 +1,7 @@
 <template>
     <div class="quest1">
         <div class="quest1-title">
-            <h1>Power up the signal</h1>
+            <h1>Synchronize Signal Frequency</h1>
         </div>
 
         <div class="control-panel">
@@ -32,8 +32,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import WaveChart from './components/WaveChart.vue'
-import TrackPad from './components/TrackPad.vue'
+import WaveChart from '../components/WaveChart.vue'
+import TrackPad from '../components/TrackPad.vue'
 
 // Configuration object for easy maintenance
 const QUEST_CONFIG = {
