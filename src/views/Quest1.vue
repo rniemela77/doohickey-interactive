@@ -246,12 +246,6 @@ onUnmounted(() => {
     gap: 2rem;
 }
 
-.border {
-    border: 1px solid rgba(255, 0, 0, 0.6);
-    border-radius: 4px;
-    padding: 1rem;
-}
-
 .trackpad-border {
     width: 100%;
     height: 100%;

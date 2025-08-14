@@ -1,51 +1,56 @@
 <template>
     <div class="quest2">
-        <div class="slots" @dragover.prevent>
-            <div
-                v-for="(slotColor, slotIndex) in slots"
-                :key="`slot-${slotIndex}`"
-                class="slot"
-                :class="{ filled: !!slotColor }"
-                @dragover.prevent
-                @drop="handleDropOnSlot(slotIndex, $event)"
-            >
-                <div
-                    v-if="slotColor"
-                    class="piece"
-                    :style="{ background: colorToCss(slotColor) }"
-                    draggable="true"
-                    @dragstart="handleDragStartFromSlot(slotIndex, slotColor, $event)"
-                />
+        <div class="timer-section border">
+            <TimerHud :active="timerActive" :formatted-time="formattedTime" :percent="timePercent" />
+        </div>
+
+        <!-- <div class="progress-section border">
+            <ProgressHud :percent="progressPercent" />
+        </div> -->
+
+        <div class="slots-section-container border">
+            <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
+                <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
+                    :class="{ filled: !!slotColor, correct: slotColor && slotColor === TARGET_ORDER[slotIndex] }"
+                    @dragover.prevent @drop="handleDropOnSlot(slotIndex, $event)">
+                    <div v-if="slotColor" class="piece" :style="{ background: colorToCss(slotColor) }"
+                        :draggable="!isCompleted" @dragstart="handleDragStartFromSlot(slotIndex, slotColor, $event)" />
+                </div>
+            </div>
+
+            <div class="bank-section" :class="{ locked: isCompleted }" @dragover.prevent
+                @drop="handleDropOnBank($event)">
+                <div v-for="(color, idx) in bankPieces" :key="`bank-${color}`" class="piece"
+                    :style="{ background: colorToCss(color) }" :draggable="!isCompleted"
+                    @dragstart="handleDragStartFromBank(color, $event)" />
             </div>
         </div>
-
-        <div class="bank" @dragover.prevent @drop="handleDropOnBank($event)">
-            <div
-                v-for="(color, idx) in bankPieces"
-                :key="`bank-${color}`"
-                class="piece"
-                :style="{ background: colorToCss(color) }"
-                draggable="true"
-                @dragstart="handleDragStartFromBank(color, $event)"
-            />
-        </div>
-
-        <div v-if="isCorrect" class="message">correct!</div>
     </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import TimerHud from '../components/TimerHud.vue';
+import ProgressHud from '../components/ProgressHud.vue';
 
-const TARGET_ORDER = ['magenta', 'blue', 'green'];
+const TARGET_ORDER = ['magenta', 'green', 'yellow', 'blue', 'orange'];
 
-const slots = ref([null, null, null]);
-const bankPieces = ref(['magenta', 'blue', 'green']);
+const slots = ref([null, null, null, null, null]);
+const bankPieces = ref(['yellow', 'blue', 'magenta', 'orange', 'green']);
+
+// countdown timer state (starts when first piece is placed)
+const TIMER_DURATION_MS = 18000;
+const TICK_MS = 10;
+const timerActive = ref(false);
+const timeLeftMs = ref(0);
+let timerIntervalId = null;
 
 function colorToCss(color) {
-    if (color === 'magenta') return 'radial-gradient(circle at 30% 30%, #ff00ff -50%, #000000 100%)';
+    if (color === 'magenta') return '#ff00ff';
     if (color === 'blue') return '#2196f3';
     if (color === 'green') return '#4caf50';
+    if (color === 'yellow') return '#ffeb3b';
+    if (color === 'orange') return '#ff9800';
     return '#888888';
 }
 
@@ -69,6 +74,8 @@ function handleDropOnSlot(targetIndex, event) {
     const payload = safeParse(event.dataTransfer.getData('text/plain'));
     if (!payload || !payload.color) return;
 
+    const prevFilledCount = slots.value.filter((c) => !!c).length;
+
     if (payload.source === 'bank') {
         const current = slots.value[targetIndex];
         if (current) {
@@ -84,6 +91,11 @@ function handleDropOnSlot(targetIndex, event) {
         slots.value[targetIndex] = payload.color;
         slots.value[fromIndex] = targetColor || null;
     }
+
+    const currentFilledCount = slots.value.filter((c) => !!c).length;
+    if (prevFilledCount === 0 && currentFilledCount > 0 && !timerActive.value) {
+        startTimer();
+    }
 }
 
 function handleDropOnBank(event) {
@@ -96,11 +108,29 @@ function handleDropOnBank(event) {
 
     bankPieces.value.push(color);
     slots.value[fromIndex] = null;
+
+    // if all slots are now empty, stop/reset the timer
+    if (slots.value.every((c) => !c)) {
+        resetTimer();
+    }
 }
 
-const isCorrect = computed(() => {
-    if (slots.value.some((c) => !c)) return false;
-    return slots.value.every((c, i) => c === TARGET_ORDER[i]);
+const progressPercent = computed(() => {
+    const correctCount = slots.value.reduce((count, color, index) => {
+        return count + (color && color === TARGET_ORDER[index] ? 1 : 0);
+    }, 0);
+    return Math.round((correctCount / TARGET_ORDER.length) * 100);
+});
+
+const formattedTime = computed(() => `${(Math.max(0, timeLeftMs.value) / 1000).toFixed(3)}s`);
+const timePercent = computed(() => Math.round((Math.max(0, timeLeftMs.value) / TIMER_DURATION_MS) * 100));
+
+const isCompleted = computed(() => slots.value.every((c, i) => c && c === TARGET_ORDER[i]));
+
+watch(progressPercent, (val) => {
+    if (val === 100) {
+        resetTimer();
+    }
 });
 
 function safeParse(str) {
@@ -110,17 +140,62 @@ function safeParse(str) {
         return null;
     }
 }
+
+function clearBoard() {
+    const colorsToReturn = slots.value.filter((c) => !!c);
+    if (colorsToReturn.length) {
+        bankPieces.value.push(...colorsToReturn);
+    }
+    slots.value = Array(TARGET_ORDER.length).fill(null);
+    resetTimer();
+}
+
+function startTimer() {
+    timerActive.value = true;
+    timeLeftMs.value = TIMER_DURATION_MS;
+    if (timerIntervalId) clearInterval(timerIntervalId);
+    timerIntervalId = setInterval(() => {
+        timeLeftMs.value = Math.max(0, timeLeftMs.value - TICK_MS);
+        if (timeLeftMs.value <= 0) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+            timerActive.value = false;
+            clearBoard();
+        }
+    }, TICK_MS);
+}
+
+function resetTimer() {
+    if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+    }
+    timerActive.value = false;
+    timeLeftMs.value = 0;
+}
 </script>
 
 <style scoped>
 .quest2 {
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
+    gap: 24px;
+}
+.slots-section, .bank-section {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
+}
+
+.slots-section-container {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
 }
 
-.slots {
+.slots-section {
     display: flex;
     gap: 24px;
 }
@@ -133,33 +208,66 @@ function safeParse(str) {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease-in-out;
+
+    &.filled {
+        border-style: solid;
+        opacity: 0.3;
+        filter: saturate(0.4);
+    }
+
+    &.correct {
+        border-color: #22c55e;
+        opacity: 1;
+        transition: all 0.2s ease-in-out;
+        animation: correct-glow 0.5s ease-in-out infinite;
+        filter: saturate(1);
+    }
 }
 
-.slot.filled {
-    border-style: solid;
-}
-
-.bank {
+.bank-section {
     display: flex;
     gap: 16px;
     min-height: 96px;
     align-items: center;
-    border: 1px solid red;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
     padding: 16px;
     border-radius: 16px;
     min-width: 100%;
+}
+
+.slots-section.locked,
+.bank-section.locked {
+    pointer-events: none;
+    opacity: 0.7;
 }
 
 .piece {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    /* background: rgba(255, 255, 255, 0.1); */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px)!important;
+    /* box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9); */
     cursor: grab;
-}
+    /* position: relative; */
+    /* overflow: hidden; */
+    /* backdrop-filter: blur(20px); */
 
-.message {
-    font-size: 20px;
-    color: #9cff9c;
+    /* &::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        width: 100%;
+        height: 100%;
+        z-index: 21;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: 50%;
+        opacity: 1;
+        transition: opacity 0.2s ease-in-out;
+    } */
 }
 </style>
