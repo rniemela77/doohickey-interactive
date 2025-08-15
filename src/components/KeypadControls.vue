@@ -6,7 +6,7 @@
                 <span v-if="status === 'loading'">VERIFYING <span class="loading-dots">...</span></span>
                 <span v-else-if="status === 'correct'" class="underline">ACCESS GRANTED</span>
                 <span v-else-if="status === 'incorrect'" class="underline">ACCESS DENIED</span>
-                <span v-else>{{ keypadValue }}<span v-if="isFocused" class="keypad-label-caret">|</span></span>
+                <span v-else>{{ keypadValue }}<span v-if="isFocused" class="keypad-label-caret">_</span></span>
             </div>
         </div>
 
@@ -144,6 +144,7 @@ const handleFocusOut = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'SevenSegment', sans-serif;
 
 }
 
@@ -160,7 +161,10 @@ const handleFocusOut = () => {
 .keypad-label-caret {
     display: inline-block;
     animation: blink 1s infinite;
-    transform: translateY(-3px);
+    font-size: 1.5rem;
+    transform: translateY(-2px);
+    padding-left: 0.2rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 @keyframes blink {
