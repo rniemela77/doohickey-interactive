@@ -50,7 +50,7 @@ const animationFrameId = ref(0)
 const lastAnimationTimestampMs = ref(0)
 
 // Tuning constants
-const backgroundTileSizePx = 20 // must match CSS background-size
+const backgroundTileSizePx = 40 // must match CSS background-size
 const velocityGain = 3 // px/s per px of displacement
 
 // Background offset within one tile for stability
@@ -152,8 +152,8 @@ const controlPosition = ref({ x: 0, y: 0 })
     /* repeating css pattern */
     background-color: #2A2A2C;
     opacity: 0.8;
-    background-image: radial-gradient(#9EA2F16C 1px, #34343A 0.5px);
-    background-size: 20px 20px;
+    background-image: radial-gradient(#9EA2F16C 2px, #34343A 0.5px);
+    background-size: 40px 40px;
     background-repeat: repeat;
 
     /* interaction */
@@ -173,10 +173,10 @@ const controlPosition = ref({ x: 0, y: 0 })
 .hand-drag-icon {
     pointer-events: none;
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
     z-index: 100;
 }
 </style>

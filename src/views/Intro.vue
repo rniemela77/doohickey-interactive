@@ -10,7 +10,7 @@
         <p class="loading-subtitle">
             <span v-if="loadingStatus === 'initializing'">Initializing ...</span>
             <span v-else-if="loadingStatus === 'loading'">Preparing Control Panel ...</span>
-            <span v-else>Control Panel Ready</span>
+            <span v-else class="blink-text">Control Panel Ready</span>
         </p>
     </div>
 </template>
@@ -126,5 +126,18 @@ const completeLoading = () => {
     opacity: 1;
     box-shadow: 0 4px 30px 5px rgba(255, 0, 0, 0.5);
     transform: scale(1.1) rotate(12deg);
+}
+
+.blink-text {
+    animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0.3;
+    }
 }
 </style>

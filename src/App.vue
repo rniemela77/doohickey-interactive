@@ -25,9 +25,9 @@ import Quest1 from './views/Quest1.vue';
 import Quest2 from './views/Quest2.vue';
 import Quest3 from './views/Quest3.vue';
 
-const showIntro = ref(false); // should set to true
+const showIntro = ref(true); // should set to true
 const showQuest1 = ref(false);
-const showQuest2 = ref(true);
+const showQuest2 = ref(false);
 const showQuest3 = ref(false);
 
 function loadingComplete() {

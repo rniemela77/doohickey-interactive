@@ -2,13 +2,16 @@
     <div class="quest2">
 
         <div class="row gap full-size">
-            <div class="border full-size"></div>
+            <div class="border full-size">
+                <SliderControl horizontal @update-value="sliderValue = $event" label="Panel Lighting" />
+            </div>
+
             <div class="timer-section border p-0">
                 <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent" />
             </div>
         </div>
 
-        <div class="slots-section-container border">
+        <div class="slots-section-container border" :style="{ opacity: `${sliderValue / 10}` }">
             <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
                 <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
                     :class="{ filled: !!slotColor, correct: slotColor && slotColor === TARGET_ORDER[slotIndex] }"
@@ -31,6 +34,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import TimerHud from '../components/TimerHud.vue';
+import SliderControl from '../components/SliderControl.vue';
+
+const sliderValue = ref(0);
 
 const emit = defineEmits(['questCompleted']);
 
