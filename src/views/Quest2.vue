@@ -1,7 +1,11 @@
 <template>
     <div class="quest2">
-        <div class="timer-section border">
-            <TimerHud :active="timerActive" :formatted-time="formattedTime" :percent="timePercent" />
+
+        <div class="row gap full-size">
+            <div class="border full-size"></div>
+            <div class="timer-section border p-0">
+                <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent" />
+            </div>
         </div>
 
         <div class="slots-section-container border">
@@ -119,7 +123,6 @@ const progressPercent = computed(() => {
     return Math.round((correctCount / TARGET_ORDER.length) * 100);
 });
 
-const formattedTime = computed(() => `${(Math.max(0, timeLeftMs.value) / 1000).toFixed(3)}s`);
 const timePercent = computed(() => Math.round((Math.max(0, timeLeftMs.value) / TIMER_DURATION_MS) * 100));
 
 const isCompleted = computed(() => slots.value.every((c, i) => c && c === TARGET_ORDER[i]));
@@ -186,7 +189,9 @@ function resetTimer() {
     align-items: flex-end;
     gap: 24px;
 }
-.slots-section, .bank-section {
+
+.slots-section,
+.bank-section {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -253,7 +258,7 @@ function resetTimer() {
     border-radius: 50%;
     /* background: rgba(255, 255, 255, 0.1); */
     border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(20px)!important;
+    backdrop-filter: blur(20px) !important;
     /* box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9); */
     cursor: grab;
     /* position: relative; */

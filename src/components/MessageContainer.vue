@@ -5,14 +5,6 @@
         <div class="message-container" ref="messageContainer">
 
             <slot />
-            <!-- <div v-for="message in messages" :key="message.id">
-            <button class="accordion-header" @click="toggleMessage(message.id)">
-                {{ message.title }}
-            </button>
-            <div class="accordion-content">
-                {{ message.content }}
-            </div>
-        </div> -->
         </div>
     </div>
 </template>
@@ -148,7 +140,6 @@ defineExpose({
 
 :deep(.msg-you) {
     align-self: flex-end;
-    margin-top: 1rem;
     padding: 0.5rem 1rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
@@ -163,8 +154,31 @@ defineExpose({
 
     &:disabled {
         border: none;
-        opacity: 0.5;
-        cursor: not-allowed;
+        cursor: default;
+        color: rgba(0 187 255 / 1);
+        background: none;
+    }
+}
+
+
+:deep(.msg-them) {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    &::before {
+        content: '?';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        flex: 0 0 20px;
+        height: 20px;
+        color: rgba(22 255 239 / 0.5);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
     }
 }
 </style>

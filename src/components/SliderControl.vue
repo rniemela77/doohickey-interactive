@@ -28,10 +28,6 @@ const sliderValue = ref(5);
 </script>
 
 <style scoped>
-.row {
-    display: flex;
-    gap: 10px;
-}
 .slider-control {
     width: 100%;
     height: 100%;

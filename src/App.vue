@@ -25,9 +25,9 @@ import Quest1 from './views/Quest1.vue';
 import Quest2 from './views/Quest2.vue';
 import Quest3 from './views/Quest3.vue';
 
-const showIntro = ref(true); // should set to true
+const showIntro = ref(false); // should set to true
 const showQuest1 = ref(false);
-const showQuest2 = ref(false);
+const showQuest2 = ref(true);
 const showQuest3 = ref(false);
 
 function loadingComplete() {
@@ -61,6 +61,10 @@ function questCompleted(questNumber) {
 </script>
 
 <style>
+.p-0 {
+    padding: 0!important;
+}
+
 .container {
     width: 100vw;
     height: 100vh;
@@ -76,12 +80,21 @@ function questCompleted(questNumber) {
     padding: 1rem;
 }
 
+.gap {
+    gap: 1rem;
+}
+
 .row {
     display: flex;
     flex-direction: row;
 }
 
-.row .column {
+.full-size {
+    width: 100%;
+    height: auto;
+}
+
+.column {
     display: flex;
     flex-direction: column;
 }

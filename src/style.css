@@ -16,3 +16,10 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+@font-face {
+    font-family: 'SevenSegment';
+    src: url('/7segment.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}

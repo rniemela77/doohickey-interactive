@@ -30,13 +30,14 @@
         <div v-if="visibleSteps.includes(3)">
             <p class="msg-them">
                 We found security footage of a worker writing the password down- I'm sending an image.
+            </p>
 
             <p style="text-align: center;" v-if="!imageDownloaded">
                 <button class="msg-you" @click="imageDownloaded = true">Download</button>
             </p>
 
             <PannableImage :src="stickiePassword" v-if="imageDownloaded" style="margin-top: 1rem;" />
-            </p>
+
 
             <button v-if="startShowingHints" class="msg-you" :disabled="visibleSteps[visibleSteps.length - 1] !== 3"
                 @click="emit('next', 3.1)">

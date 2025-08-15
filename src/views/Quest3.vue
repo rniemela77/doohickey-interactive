@@ -1,14 +1,19 @@
 <template>
     <div class="quest3">
-        <div class="row flex-start flex-wrap">
+        <div class="row flex-wrap gap">
+            <div class="border">
+                <MessageContainer contact="(Unknown Number)">
+                    <Quest3Messages :visibleSteps="visibleSteps" @next="visibleSteps.push($event)"
+                        @canWipe="canWipe = $event" :hasErasedHalf="hasErasedHalf"
+                        :startShowingHints="startShowingHints" />
+                </MessageContainer>
+            </div>
 
-            <MessageContainer class="border" contact="(Unknown Number)">
-                <Quest3Messages :visibleSteps="visibleSteps" @next="visibleSteps.push($event)"
-                    @canWipe="canWipe = $event" :hasErasedHalf="hasErasedHalf" :startShowingHints="startShowingHints" />
-            </MessageContainer>
 
+            <div :style="{ opacity: visibleSteps.includes(1) ? 1 : 0 }"
+                style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="border" style="width: 100%; height: 100%; flex: 1;"></div>
 
-            <div :style="{ opacity: visibleSteps.includes(1) ? 1 : 0 }">
                 <FrostyScreen :visibleSteps="visibleSteps" :canWipe="canWipe" @erasedHalf="hasErasedHalf = true">
                     <div class="control-tip-overlay" v-if="canWipe">
                         Drag to Clean
@@ -53,12 +58,6 @@ const correctPassword = () => {
     flex-direction: column;
 }
 
-.row {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-}
-
 .message-container {
     max-width: 500px;
 }
@@ -69,8 +68,6 @@ const correctPassword = () => {
 
 .flex-wrap {
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
 }
 
 .frosty-screen-content {
