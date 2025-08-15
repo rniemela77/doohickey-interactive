@@ -3,7 +3,6 @@
         <div class="contact-name">{{ contact }}</div>
 
         <div class="message-container" ref="messageContainer">
-
             <slot />
         </div>
     </div>

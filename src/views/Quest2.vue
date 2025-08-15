@@ -11,7 +11,7 @@
             </div>
         </div>
 
-        <div class="slots-section-container border" :style="{ opacity: `${sliderValue / 10}` }">
+        <div class="slots-section-container border">
             <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
                 <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
                     :class="{ filled: !!slotColor, correct: slotColor && slotColor === TARGET_ORDER[slotIndex] }"
@@ -22,7 +22,8 @@
             </div>
 
             <div class="bank-section" :class="{ locked: isCompleted }" @dragover.prevent
-                @drop="handleDropOnBank($event)">
+                @drop="handleDropOnBank($event)"
+                :style="{ opacity: `${sliderValue / 5 - 0.8}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }">
                 <div v-for="(color, idx) in bankPieces" :key="`bank-${color}`" class="piece"
                     :style="{ background: colorToCss(color) }" :draggable="!isCompleted"
                     @dragstart="handleDragStartFromBank(color, $event)" />
@@ -208,6 +209,7 @@ function resetTimer() {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    transition: all 0.2s ease-in-out;
 }
 
 .slots-section {

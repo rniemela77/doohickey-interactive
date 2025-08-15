@@ -291,4 +291,28 @@ onUnmounted(() => {
         transform: translate(-50%, -50%);
     }
 }
+
+.quest-text {
+    &:after {
+        /* noise/glithc effect */
+        animation: scrambled 1s ease-in-out;
+        background: url('https://picsum.photos/200/300') no-repeat center center;
+        background-size: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.5;
+    }
+}
+
+@keyframes scrambled {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
 </style>

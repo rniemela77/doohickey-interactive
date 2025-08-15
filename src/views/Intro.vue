@@ -1,17 +1,22 @@
 <template>
-    <div class="loading-page">
-        <p class="loading-title">LOADING</p>
+    <div class="loading-page border">
 
-        <div class="loading-bar">
-            <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
-                :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+        <button v-if="loadingStatus === 'unstarted'" @click="login">LOGIN</button>
+
+        <div v-else>
+            <p class="loading-title">LOADING</p>
+
+            <div class="loading-bar">
+                <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
+                    :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+            </div>
+
+            <p class="loading-subtitle">
+                <span :class="{ 'red': loadingStatus === 'initializing' }">Initializing</span>
+                <span :class="{ 'red': loadingStatus === 'loading' }">Preparing</span>
+                <span :class="{ 'red': loadingStatus === 'complete' }">Ready</span>
+            </p>
         </div>
-
-        <p class="loading-subtitle">
-            <span v-if="loadingStatus === 'initializing'">Initializing ...</span>
-            <span v-else-if="loadingStatus === 'loading'">Preparing Control Panel ...</span>
-            <span v-else class="blink-text">Control Panel Ready</span>
-        </p>
     </div>
 </template>
 
@@ -21,7 +26,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 // Constants for better maintainability
 const LOADING_CONFIG = {
     INITIAL_DELAY: 2000,
-    INTERVAL_MS: 50,
+    INTERVAL_MS: 80,
     MAX_BARS: 35,
     PROBABILITY_THRESHOLD: 0.5
 };
@@ -30,16 +35,17 @@ const emit = defineEmits(['loadingComplete']);
 
 const loadingBar = ref(0);
 const loadingBarMax = LOADING_CONFIG.MAX_BARS;
-const loadingStatus = ref('initializing'); // 'initializing', 'loading', 'complete'
+const loadingStatus = ref('unstarted'); // 'unstarted', 'initializing', 'loading', 'complete'
 
 let loadingInterval = null;
 
-onMounted(async () => {
+const login = async () => {
+    loadingStatus.value = 'initializing';
     // Wait for initial delay, then start counting
     await new Promise(resolve => setTimeout(resolve, LOADING_CONFIG.INITIAL_DELAY));
     loadingStatus.value = 'loading';
     startCounting();
-});
+};
 
 onUnmounted(() => {
     // Clean up interval to prevent memory leaks
@@ -93,8 +99,36 @@ const completeLoading = () => {
 
 .loading-subtitle {
     font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
     text-transform: uppercase;
     margin-top: 4rem;
+
+    &>* {
+        color: rgba(255, 255, 255, 0.2);
+        padding: 0.2rem 1rem;
+        transition: all 1s ease;
+
+
+        &.red {
+            color: white;
+            animation: flashRed 1s ease-in-out infinite;
+            text-shadow: 0 0 10px red;
+            box-shadow: 0 0 5px red;
+        }
+    }
+}
+
+@keyframes flashRed {
+
+    0%,
+    100% {
+        color: white;
+    }
+
+    50% {
+        color: red;
+    }
 }
 
 .loading-subtitle-ready-content {
@@ -128,16 +162,19 @@ const completeLoading = () => {
     transform: scale(1.1) rotate(12deg);
 }
 
-.blink-text {
-    animation: blink 1.5s ease-in-out infinite;
-}
+button {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    font-size: 3rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 1rem 2rem;
 
-@keyframes blink {
-    0%, 50% {
-        opacity: 1;
-    }
-    51%, 100% {
-        opacity: 0.3;
+    &:hover {
+        border: 1px solid red;
+        color: red;
     }
 }
 </style>

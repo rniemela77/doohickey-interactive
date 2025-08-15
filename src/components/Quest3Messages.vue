@@ -39,7 +39,7 @@
             <PannableImage :src="stickiePassword" v-if="imageDownloaded" style="margin-top: 1rem;" />
 
 
-            <button v-if="startShowingHints" class="msg-you" :disabled="visibleSteps[visibleSteps.length - 1] !== 3"
+            <button v-if="startShowingHints >= 2" class="msg-you" :disabled="visibleSteps[visibleSteps.length - 1] !== 3"
                 @click="emit('next', 3.1)">
                 The password doesn't work
             </button>
@@ -52,7 +52,7 @@
                 Maybe we're looking at it wrong?
             </p>
 
-            <button class="msg-you" :disabled="visibleSteps[visibleSteps.length - 1] !== 3.1"
+            <button v-if="startShowingHints >= 4" class="msg-you" :disabled="visibleSteps[visibleSteps.length - 1] !== 3.1"
                 @click="emit('next', 3.2)">
                 I need help.
             </button>
@@ -87,7 +87,7 @@ const props = defineProps({
         required: true
     },
     startShowingHints: {
-        type: Boolean,
+        type: Number,
         required: true
     }
 })
