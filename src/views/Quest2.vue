@@ -4,10 +4,6 @@
             <TimerHud :active="timerActive" :formatted-time="formattedTime" :percent="timePercent" />
         </div>
 
-        <!-- <div class="progress-section border">
-            <ProgressHud :percent="progressPercent" />
-        </div> -->
-
         <div class="slots-section-container border">
             <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
                 <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
@@ -31,7 +27,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import TimerHud from '../components/TimerHud.vue';
-import ProgressHud from '../components/ProgressHud.vue';
+
+const emit = defineEmits(['questCompleted']);
 
 const TARGET_ORDER = ['magenta', 'green', 'yellow', 'blue', 'orange'];
 
@@ -126,6 +123,13 @@ const formattedTime = computed(() => `${(Math.max(0, timeLeftMs.value) / 1000).t
 const timePercent = computed(() => Math.round((Math.max(0, timeLeftMs.value) / TIMER_DURATION_MS) * 100));
 
 const isCompleted = computed(() => slots.value.every((c, i) => c && c === TARGET_ORDER[i]));
+
+watch(isCompleted, async (val) => {
+    if (val) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        emit('questCompleted');
+    }
+});
 
 watch(progressPercent, (val) => {
     if (val === 100) {

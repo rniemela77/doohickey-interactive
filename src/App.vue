@@ -5,29 +5,16 @@
         </transition>
 
         <transition name="fade">
-            <Quest1 v-if="showQuest1" @questCompleted="questCompleted" />
+            <Quest1 v-if="showQuest1" @questCompleted="questCompleted(1)" />
         </transition>
 
         <transition name="fade">
-            <Quest2 v-if="showQuest2" />
+            <Quest2 v-if="showQuest2" @questCompleted="questCompleted(2)" />
         </transition>
-        <!-- <BigRedText />
 
-    <div class="row">
-      <div class="column col-25">
-        <div class="tasks">
-          <div class="task" v-for="i in 3" :key="i">Task {{ i }}</div>
-        </div>
-        <div class="chats">
-          <div class="chat" v-for="i in 3" :key="i">Chat {{ i }}</div>
-        </div>
-      </div>
-
-      <div class="column col-75">
-        <KeypadControls />
-        <SliderControl />
-        <KnobControl />
-      </div> -->
+        <transition name="fade">
+            <Quest3 v-if="showQuest3" @questCompleted="questCompleted(3)" />
+        </transition>
     </div>
 </template>
 
@@ -36,10 +23,12 @@ import { ref } from 'vue';
 import Intro from './views/Intro.vue';
 import Quest1 from './views/Quest1.vue';
 import Quest2 from './views/Quest2.vue';
+import Quest3 from './views/Quest3.vue';
 
-const showIntro = ref(false); // should set to true
+const showIntro = ref(true); // should set to true
 const showQuest1 = ref(false);
-const showQuest2 = ref(true);
+const showQuest2 = ref(false);
+const showQuest3 = ref(false);
 
 function loadingComplete() {
     showIntro.value = false;
@@ -51,12 +40,22 @@ function loadingComplete() {
     }, 2000);
 }
 
-function questCompleted() {
-    showQuest1.value = false;
+function questCompleted(questNumber) {
+    if (questNumber === 1) {
+        showQuest1.value = false;
+    } else if (questNumber === 2) {
+        showQuest2.value = false;
+    } else if (questNumber === 3) {
+        showQuest3.value = false;
+    }
 
-    // wait 1s, then show quest2
+    // wait 1s, then show the next quest
     setTimeout(() => {
-        showQuest2.value = true;
+        if (questNumber === 1) {
+            showQuest2.value = true;
+        } else if (questNumber === 2) {
+            showQuest3.value = true;
+        }
     }, 2000);
 }
 </script>

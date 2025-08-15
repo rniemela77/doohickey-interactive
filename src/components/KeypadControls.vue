@@ -1,11 +1,12 @@
 <template>
-    <div class="keypad-controls-container" @focusin="handleFocusIn" @focusout="handleFocusOut">
-        <div class="keypad-label-container">
+    <div class="keypad-controls-container" @focusin="handleFocusIn" @focusout="handleFocusOut"
+        :class="{ 'interactive': interactive }">
+        <div class="keypad-label-container" :class="{ 'success': status === 'correct' }">
             <div class="keypad-label">
-                <span v-if="status === 'loading'">LOADING <span class="loading-dots">...</span></span>
+                <span v-if="status === 'loading'">VERIFYING <span class="loading-dots">...</span></span>
                 <span v-else-if="status === 'correct'" class="underline">ACCESS GRANTED</span>
                 <span v-else-if="status === 'incorrect'" class="underline">ACCESS DENIED</span>
-                <span v-else>{{ keypadValue }}<span v-if="isFocused"class="keypad-label-caret">|</span></span>
+                <span v-else>{{ keypadValue }}<span v-if="isFocused" class="keypad-label-caret">|</span></span>
             </div>
         </div>
 
@@ -16,8 +17,8 @@
             <button class="key" @click="handleKeyClick('delete')">
                 delete
             </button>
-            <button class="key" @click="handleKeyClick('clear')">
-                clear
+            <button class="key" @click="handleKeyClick('0')">
+                0
             </button>
             <button class="key" @click="handleEnterClick">
                 enter
@@ -29,14 +30,21 @@
 <script setup>
 import { ref } from 'vue'
 
-const keypadValue = ref(' ')
-const correctPassword = ref('1234')
+const props = defineProps({
+    interactive: {
+        type: Boolean,
+        default: true
+    }
+})
+
+const emit = defineEmits(['wrong-password', 'correct-password'])
+
+const keypadValue = ref('')
+const correctPassword = ref('9108')
 
 const handleKeyClick = (i) => {
     if (i === 'delete') {
         keypadValue.value = keypadValue.value.slice(0, -1)
-    } else if (i === 'clear') {
-        keypadValue.value = ''
     } else if (keypadValue.value.length < 9) {
         keypadValue.value += `${i}`
     }
@@ -47,15 +55,17 @@ const status = ref('ready')
 const handleEnterClick = async () => {
     status.value = 'loading'
 
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     if (keypadValue.value === correctPassword.value) {
         status.value = 'correct'
+        emit('correct-password')
     } else {
+        emit('wrong-password')
         status.value = 'incorrect'
     }
 
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    await new Promise(resolve => setTimeout(resolve, 2000))
     keypadValue.value = '';
     status.value = 'ready';
 }
@@ -76,12 +86,17 @@ const handleFocusOut = () => {
     display: flex;
     gap: 0.5rem;
     flex-direction: column;
+    pointer-events: none;
+}
+
+.interactive {
+    pointer-events: auto;
 }
 
 .keypad-controls {
     display: grid;
     grid-template-columns: repeat(3, 80px);
-    grid-template-rows: repeat(3, 80px) 50px;
+    grid-template-rows: repeat(4, 80px);
     gap: 0.3rem;
 
     &.loading {
@@ -121,18 +136,25 @@ const handleFocusOut = () => {
 
 .keypad-label {
     width: fit-content;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: bold;
-    color: red;
+    padding: 0.5rem;
     text-align: center;
     height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
+
 }
 
 .keypad-label-container {
     border: 1px solid red;
+    color: red;
+
+    &.success {
+        color: lime;
+        border: 1px solid lime;
+    }
 }
 
 .keypad-label-caret {
@@ -167,9 +189,5 @@ const handleFocusOut = () => {
     50% {
         opacity: 0;
     }
-}
-
-.underline {
-    text-decoration: underline;
 }
 </style>
