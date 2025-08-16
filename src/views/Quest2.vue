@@ -7,26 +7,30 @@
             </div>
 
             <div class="timer-section border p-0">
-                <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent" />
+                <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent"
+                    :style="{ opacity: `${sliderValue / 10}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }" />
             </div>
         </div>
 
-        <div class="slots-section-container border">
-            <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
-                <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
-                    :class="{ filled: !!slotColor, correct: slotColor && slotColor === TARGET_ORDER[slotIndex] }"
-                    @dragover.prevent @drop="handleDropOnSlot(slotIndex, $event)">
-                    <div v-if="slotColor" class="piece" :style="{ background: colorToCss(slotColor) }"
-                        :draggable="!isCompleted" @dragstart="handleDragStartFromSlot(slotIndex, slotColor, $event)" />
+        <div class="border">
+            <div class="slots-section-container "
+                :style="{ opacity: `${sliderValue / 10}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }">
+                <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
+                    <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
+                        :class="{ filled: !!slotColor, correct: slotColor && slotColor === TARGET_ORDER[slotIndex] }"
+                        @dragover.prevent @drop="handleDropOnSlot(slotIndex, $event)">
+                        <div v-if="slotColor" class="piece" :style="{ background: colorToCss(slotColor) }"
+                            :draggable="!isCompleted"
+                            @dragstart="handleDragStartFromSlot(slotIndex, slotColor, $event)" />
+                    </div>
                 </div>
-            </div>
 
-            <div class="bank-section" :class="{ locked: isCompleted }" @dragover.prevent
-                @drop="handleDropOnBank($event)"
-                :style="{ opacity: `${sliderValue / 5 - 0.8}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }">
-                <div v-for="(color, idx) in bankPieces" :key="`bank-${color}`" class="piece"
-                    :style="{ background: colorToCss(color) }" :draggable="!isCompleted"
-                    @dragstart="handleDragStartFromBank(color, $event)" />
+                <div class="bank-section" :class="{ locked: isCompleted }" @dragover.prevent
+                    @drop="handleDropOnBank($event)">
+                    <div v-for="(color, idx) in bankPieces" :key="`bank-${color}`" class="piece"
+                        :style="{ background: colorToCss(color) }" :draggable="!isCompleted"
+                        @dragstart="handleDragStartFromBank(color, $event)" />
+                </div>
             </div>
         </div>
     </div>

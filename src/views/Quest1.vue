@@ -7,11 +7,20 @@
         <div class="control-panel">
             <transition-group name="fade">
                 <div class="border" v-if="state.showWaveChart">
-                    <WaveChart 
-                        :control-position="controlPosition" 
-                        :goal-position="goalPosition" 
-                        :speed="speed" 
-                    />
+                    <span class="text-xs">SIGNAL FREQUENCY</span>
+
+                    <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
+
+                    <span class="seven-segment text-xs d-flex text-red">
+                        <span class="flex-1">
+                            TSRF: [ <span :class="{ 'text-white': Math.abs(goalPosition.x - controlPosition.x) < 1 }">{{
+                                Math.round(controlPosition.x - 25) * 3 }}</span> ]
+                        </span>
+                        <span class="flex-1">
+                            PPU: [ <span :class="{ 'text-white': Math.abs(goalPosition.y - controlPosition.y) < 1 }">{{
+                                Math.round(controlPosition.y - 25) * 900 }}</span> ]
+                        </span>
+                    </span>
                 </div>
 
                 <blockquote class="quest-text" v-if="state.showQuestText">
@@ -20,10 +29,7 @@
                 </blockquote>
 
                 <div class="border trackpad-border" v-if="state.showTrackPad">
-                    <TrackPad 
-                        @controlPositionChange="handleControlPositionChange" 
-                        :disabled="isFinished" 
-                    />
+                    <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
                 </div>
             </transition-group>
         </div>
@@ -165,13 +171,13 @@ const checkIfFinished = async () => {
 
         // Wait and show completion message
         await TimingService.delay(QUEST_CONFIG.timing.goalAnimationDelay)
-        
+
         state.value.showQuestText = true
         questText.value = QUEST_CONFIG.messages.completed
 
         // Wait and complete quest
         await TimingService.delay(QUEST_CONFIG.timing.completionDelay)
-        
+
         // Hide components
         state.value.showQuestText = false
         state.value.showTrackPad = false
@@ -311,6 +317,7 @@ onUnmounted(() => {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }

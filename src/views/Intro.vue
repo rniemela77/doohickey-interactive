@@ -1,21 +1,22 @@
 <template>
-    <div class="loading-page border">
+    <div class="loading-page">
+        <div class="border">
+            <button v-if="loadingStatus === 'unstarted'" @click="login">START</button>
 
-        <button v-if="loadingStatus === 'unstarted'" @click="login">LOGIN</button>
+            <div :style="{ opacity: loadingStatus === 'unstarted' ? 0 : 1, transition: 'opacity 0.9s ease-in-out' }">
+                <p class="loading-title">LOADING</p>
 
-        <div v-else>
-            <p class="loading-title">LOADING</p>
+                <div class="loading-bar">
+                    <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
+                        :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+                </div>
 
-            <div class="loading-bar">
-                <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
-                    :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+                <p class="loading-subtitle">
+                    <span :class="{ 'red': loadingStatus === 'initializing' }">Initializing</span>
+                    <span :class="{ 'red': loadingStatus === 'loading' }">Installing</span>
+                    <span :class="{ 'red': loadingStatus === 'complete' }">Ready</span>
+                </p>
             </div>
-
-            <p class="loading-subtitle">
-                <span :class="{ 'red': loadingStatus === 'initializing' }">Initializing</span>
-                <span :class="{ 'red': loadingStatus === 'loading' }">Preparing</span>
-                <span :class="{ 'red': loadingStatus === 'complete' }">Ready</span>
-            </p>
         </div>
     </div>
 </template>
@@ -26,8 +27,8 @@ import { ref, onMounted, onUnmounted } from 'vue';
 // Constants for better maintainability
 const LOADING_CONFIG = {
     INITIAL_DELAY: 2000,
-    INTERVAL_MS: 80,
-    MAX_BARS: 35,
+    INTERVAL_MS: 90,
+    MAX_BARS: 25,
     PROBABILITY_THRESHOLD: 0.5
 };
 
@@ -102,7 +103,9 @@ const completeLoading = () => {
     display: flex;
     justify-content: space-between;
     text-transform: uppercase;
-    margin-top: 4rem;
+    margin: 0;
+    padding: 1.5rem 0;
+    font-size: 0.6rem;
 
     &>* {
         color: rgba(255, 255, 255, 0.2);
@@ -113,8 +116,6 @@ const completeLoading = () => {
         &.red {
             color: white;
             animation: flashRed 1s ease-in-out infinite;
-            text-shadow: 0 0 10px red;
-            box-shadow: 0 0 5px red;
         }
     }
 }
@@ -123,11 +124,12 @@ const completeLoading = () => {
 
     0%,
     100% {
-        color: white;
+        color: rgba(255, 255, 255, 0.2);
     }
 
     50% {
         color: red;
+        text-shadow: 0 0 10px red;
     }
 }
 
@@ -142,16 +144,17 @@ const completeLoading = () => {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 7px;
 }
 
 .loading-dot {
+    flex: 1;
     width: 6px;
     height: 40px;
     border-radius: 2px;
     opacity: 0.3;
     background: red;
     border: 1px solid red;
-    margin: 0 4px;
     transition: all 0.1s ease;
     transform: rotate(12deg);
 }
@@ -164,17 +167,24 @@ const completeLoading = () => {
 
 button {
     background: none;
-    border: 1px solid white;
-    color: white;
+    border: none;
+    color: red;
     font-size: 3rem;
     text-transform: uppercase;
     font-weight: bold;
     cursor: pointer;
     padding: 1rem 2rem;
+    transition: all 0.3s ease-in-out;
+    text-shadow: 0 0 1px red;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
 
     &:hover {
-        border: 1px solid red;
-        color: red;
+        color: white;
+        text-shadow: 0 0 5px red, 0 0 10px red;
     }
 }
 </style>
