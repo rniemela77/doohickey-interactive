@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="row justify-content-end">
+        <div class="message-expand-button row justify-content-end">
             <button @click="toggleExpand">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     :style="{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }">
@@ -18,8 +18,10 @@
                         <div class="contact-name">Unknown Number</div>
 
                         <div class="message-container" ref="messageContainer">
+                            <Quest0Messages v-if="steps.includes(0.0)" />
                             <Quest1Messages v-if="steps.includes(1.0)" />
                             <Quest2Messages v-if="steps.includes(2.0)" />
+                            <Quest3Messages v-if="steps.includes(3.0)" />
                         </div>
                     </div>
                 </div>
@@ -31,8 +33,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useQuestStore } from '../composables/useQuestStore'
+import Quest0Messages from './Quest0Messages.vue'
 import Quest1Messages from './Quest1Messages.vue'
 import Quest2Messages from './Quest2Messages.vue'
+import Quest3Messages from './Quest3Messages.vue'
+
 const { steps } = useQuestStore()
 
 const props = defineProps({
@@ -67,6 +72,7 @@ const setupAutoScroll = () => {
 
     // Create a MutationObserver to watch for changes in the slot content
     observer = new MutationObserver((mutations) => {
+
         // Check if any mutations added new nodes
         const hasNewContent = mutations.some(mutation =>
             mutation.type === 'childList' && mutation.addedNodes.length > 0
@@ -121,6 +127,7 @@ button {
 .messages {
     height: 100%;
     overflow: auto;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .messages-container {
@@ -131,6 +138,7 @@ button {
 .message-container-wrapper {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
     padding: 0;
     max-width: 500px;
@@ -139,7 +147,6 @@ button {
 .contact-name {
     position: sticky;
     top: 0;
-    width: 100%;
     background: rgba(255 255 255 / 0.27);
     font-size: 1.2rem;
     font-weight: bold;
@@ -152,6 +159,7 @@ button {
     flex-direction: column;
     gap: 10px;
     height: 80vh;
+    padding-bottom: 3rem;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: red rgba(255, 0, 0, 0.2);
@@ -162,7 +170,6 @@ button {
 }
 
 .message-container::-webkit-scrollbar-thumb {
-    /* background: red; */
     background: rgba(255, 0, 0, 0.2);
     border: 1px solid red;
 }

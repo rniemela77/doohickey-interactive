@@ -1,16 +1,22 @@
 <template>
     <button class="fingerprint-container" @mousedown="onPressStart" @mouseup="onPressEnd" @mouseleave="onPressCancel"
         @touchstart.prevent="onPressStart" @touchend="onPressEnd" @touchcancel="onPressCancel"
-        :class="{ pressed: isPressed }">
+        :class="{ pressed: isPressed, success: isSuccess }">
+        <HandDrag v-if="!isPressed && !isSuccess" class="pulse-fade" />
+        <span v-if="isSuccess" style="font-size: 2rem; color: white;">
+            ✓
+        </span>
     </button>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import HandDrag from '../icons/HandDrag.vue';
 
 // user has to hold down the button for 3 seconds to trigger the fingerprint
 const HOLD_DURATION_MS = 3000;
 const isPressed = ref(false);
+const isSuccess = ref(false);
 let holdTimerId = null;
 
 const emit = defineEmits(['fingerprint']);
@@ -24,6 +30,7 @@ function onPressStart(e) {
         // success only if still held
         if (isPressed.value) {
             emit('fingerprint');
+            isSuccess.value = true;
         }
         clearHoldTimer();
     }, HOLD_DURATION_MS);
@@ -81,7 +88,8 @@ button {
         transform: translate(-50%, -50%);
         transition: all 0.1s linear;
         background: rgba(255, 0, 0, 0.5);
-    }   
+    }
+
     &::after {
         content: '';
         position: absolute;
@@ -103,10 +111,16 @@ button.pressed {
         height: 100%;
         transition: all 3s linear;
     }
+
     &::after {
         width: 100%;
         height: 100%;
         transition: all 3s linear;
     }
+}
+
+button.success {
+    border: none;
+    pointer-events: none;
 }
 </style>

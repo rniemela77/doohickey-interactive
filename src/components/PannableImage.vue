@@ -1,7 +1,9 @@
 <template>
-    <div class="frosty-screen-content-text">
-        <img :src="src" width="150px" :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
-            @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
+    <div class="pannable-image">
+        <DistortionEffect :freqX="0.02" :freqY="0.015" :scale="50">
+            <img :src="src" width="150px" :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
+                @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
+        </DistortionEffect>
 
         <button class="reset-btn" @click="resetImage">RESET</button>
     </div>
@@ -9,6 +11,7 @@
 
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
+import DistortionEffect from './DistortionEffect.vue';
 
 const props = defineProps({
     src: {
@@ -100,8 +103,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+img {
+    z-index: 3;
+}
+
 .reset-btn {
-    margin-top: 1rem;
     padding: 0.5rem 1rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
@@ -111,7 +117,10 @@ onBeforeUnmount(() => {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    z-index: 10;
+    z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
     transition: all 0.2s ease;
 
     &:hover {

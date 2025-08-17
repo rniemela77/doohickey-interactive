@@ -4,7 +4,7 @@
             :style="{ backgroundPosition: backgroundPosition }" @pointerdown="onPointerDown"
             @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp">
 
-            <HandIcon v-if="!disabled" :style="{ opacity: !isDragging ? 1 : 0.1 }" class="hand-drag-icon" />
+            <HandIcon v-if="!disabled" :style="{ opacity: !isDragging ? 1 : 0.1 }" class="hand-drag-icon pulse-fade" />
         </div>
     </div>
 </template>

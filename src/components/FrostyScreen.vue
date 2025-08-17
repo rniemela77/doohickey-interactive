@@ -1,7 +1,7 @@
 <template>
-                <div class="frosty-screen" ref="frostyEl">
-    <canvas ref="frostyCanvas" class="frosty-overlay"
-        :style="{ pointerEvents: canWipe ? 'auto' : 'none', opacity: visibleSteps.includes(3) ? 0.8 : 1 }"></canvas>
+    <div class="frosty-screen" ref="frostyEl">
+        <canvas ref="frostyCanvas" class="frosty-overlay"
+            :style="{ pointerEvents: canWipe ? 'auto' : 'none' }"></canvas>
 
         <slot></slot>
     </div>
@@ -11,10 +11,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
-    visibleSteps: {
-        type: Array,
-        required: true
-    },
     canWipe: {
         type: Boolean,
         required: true

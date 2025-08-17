@@ -1,6 +1,5 @@
 <template>
     <div class="container">
-        
         <div class="border message-log" :class="{ 'message-log-expanded': isMessageLogExpanded }">
             <MessageLog :is-expanded="isMessageLogExpanded" @toggle-expand="isMessageLogExpanded = $event" />
         </div>
@@ -21,11 +20,15 @@
             <transition name="fade">
                 <Quest3 v-if="showQuest3" @questCompleted="questCompleted(3)" />
             </transition>
+
+            <transition name="fade">
+                <Quest5 v-if="showQuest5" @questCompleted="questCompleted(5)" />
+            </transition>
         </div>
 
-        <!-- <GlitchOverlay /> -->
+        <GlitchOverlay />
 
-        <!-- <AppBg /> -->
+        <AppBg />
     </div>
 </template>
 
@@ -38,11 +41,14 @@ import Quest3 from './views/Quest3.vue';
 import AppBg from './components/AppBg.vue';
 import MessageLog from './components/MessageLog.vue';
 import GlitchOverlay from './components/GlitchyOverlay.vue';
+import Quest5 from './views/Quest5.vue';
 
-const showIntro = ref(false); // should set to true
+const showIntro = ref(true); // should set to true
 const showQuest1 = ref(false);
 const showQuest2 = ref(false);
-const showQuest3 = ref(true);
+const showQuest3 = ref(false);
+const showQuest5 = ref(false);
+
 const isMessageLogExpanded = ref(true);
 
 function loadingComplete() {
@@ -70,6 +76,8 @@ function questCompleted(questNumber) {
             showQuest2.value = true;
         } else if (questNumber === 2) {
             showQuest3.value = true;
+        } else if (questNumber === 3) {
+            showQuest5.value = true;
         }
     }, 2000);
 }
@@ -110,9 +118,9 @@ function questCompleted(questNumber) {
         position: absolute;
         top: 0;
         left: 0;
-        z-index: 2;
+        z-index: 300;
 
-        :deep(button) {
+        :deep(.message-expand-button) {
             position: absolute;
             top:0;
             right:0;

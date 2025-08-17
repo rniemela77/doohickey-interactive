@@ -1,7 +1,7 @@
 <template>
     <div class="loading-page">
-        <div class="border">
-            <button v-if="loadingStatus === 'unstarted'" @click="login">START</button>
+        <div class="border loading-container" ref="loadingContainer">
+            <button v-if="loadingStatus === 'unstarted'" @click="handleClick">START</button>
 
             <div :style="{ opacity: loadingStatus === 'unstarted' ? 0 : 1, transition: 'opacity 0.9s ease-in-out' }">
                 <p class="loading-title">LOADING</p>
@@ -23,6 +23,18 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import cracked from '../../cracked.png'
+import { useQuestStore } from '../composables/useQuestStore'
+
+const { steps } = useQuestStore()
+
+onMounted(() => {
+    // wait 1s
+    setTimeout(() => {
+        steps.value.push(0.0);
+    }, 1000);
+});
+
 
 // Constants for better maintainability
 const LOADING_CONFIG = {
@@ -40,22 +52,58 @@ const loadingStatus = ref('unstarted'); // 'unstarted', 'initializing', 'loading
 
 let loadingInterval = null;
 
-const login = async () => {
+// when click on loadContainer, place an image at the mouse location
+const loadingContainer = ref(null);
+const hasCracked = ref(false);
+const clickCount = ref(0);
+const jiggleButton = () => {
+    loadingContainer.value.classList.add('cracked');
+    setTimeout(() => {
+        loadingContainer.value.classList.remove('cracked');
+    }, 100);
+}
+const handleClick = async (e) => {
+    
+    if (clickCount.value < 3) {
+        jiggleButton();
+        clickCount.value++;
+        return;
+    }
+    placeCrackedImage(e, 4);
+
+
     loadingStatus.value = 'initializing';
-    // Wait for initial delay, then start counting
     await new Promise(resolve => setTimeout(resolve, LOADING_CONFIG.INITIAL_DELAY));
     loadingStatus.value = 'loading';
-    startCounting();
+
+    startLoading();
+    steps.value.push(0.1);
+};
+const placeCrackedImage = (e, size, randomizeRotation = false) => {
+    const imageSize = 50 * size;
+
+    const rect = loadingContainer.value.getBoundingClientRect();
+    const x = e.clientX - rect.left - imageSize / 2;
+    const y = e.clientY - rect.top - imageSize / 2;
+    const image = new Image();
+    image.src = cracked;
+    Object.assign(image.style, {
+        position: 'absolute',
+        left: `${x + 15}px`,
+        rotate: randomizeRotation ? `${Math.random() * 360}deg` : '0deg',
+        top: `${y}px`,
+        width: `${imageSize}px`,
+        height: `${imageSize}px`,
+        zIndex: '1',          // keep within the container’s stacking context
+        pointerEvents: 'none', // so clicks pass through
+        mixBlendMode: 'plus-lighter',
+        opacity: '0.7',
+        filter: 'contrast(0.8) invert(1)',
+    });
+    loadingContainer.value.appendChild(image);
 };
 
-onUnmounted(() => {
-    // Clean up interval to prevent memory leaks
-    if (loadingInterval) {
-        clearInterval(loadingInterval);
-    }
-});
-
-const startCounting = () => {
+const startLoading = () => {
     loadingInterval = setInterval(() => {
         loadingBar.value += Math.random() > LOADING_CONFIG.PROBABILITY_THRESHOLD ? 1 : 0;
 
@@ -80,14 +128,22 @@ const completeLoading = () => {
         emit('loadingComplete');
     }, 1000);
 };
+
+
 </script>
 
 <style scoped>
+.loading-container {
+    overflow: hidden;
+    position: relative;
+}
+
 .loading-page {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    height: 100%;
 }
 
 .loading-title {
@@ -185,6 +241,36 @@ button {
     &:hover {
         color: white;
         text-shadow: 0 0 5px red, 0 0 10px red;
+    }
+}
+
+.cracked {
+    animation: crack 0.2s ease-in-out forwards;
+}
+
+@keyframes crack {
+    0% {
+        transform: translateX(0);
+    }
+
+    10% {
+        transform: translateX(10px);
+    }
+
+    20% {
+        transform: translateX(-20px);
+    }
+
+    30% {
+        transform: translateX(10px);
+    }
+
+    40% {
+        transform: translateX(-5px);
+    }
+
+    50% {
+        transform: translateX(0);
     }
 }
 </style>

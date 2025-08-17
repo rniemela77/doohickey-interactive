@@ -76,7 +76,6 @@ h1 {
 
 .d-flex {
     display: flex;
-    align-items: center;
 }
 
 .justify-content-between {
@@ -89,6 +88,10 @@ h1 {
 
 .p-0 {
     padding: 0 !important;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
 }
 
 
@@ -166,6 +169,10 @@ body {
 
 .justify-content-end {
     justify-content: flex-end;
+}
+
+.align-items-center {
+    align-items: center;
 }
 
 .pulse-fade {

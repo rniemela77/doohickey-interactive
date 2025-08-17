@@ -1,9 +1,7 @@
 <template>
     <div class="quest2">
-        <div class="row gap">
-            <div class="border d-flex row gap flex-1" style="position: relative;">
-                <BrokenGlass style="width: 50%; height: 50%; position: absolute;"></BrokenGlass>
-
+        <div class="scan-timer-section row gap d-flex">
+            <div class="scan-slider-section border d-flex row gap" style="position: relative;">
                 <div class="text-xs column">
                     Scan
                     <FingerPrint @fingerprint="onFingerprintSuccess" />
@@ -13,7 +11,7 @@
                     :style="{ opacity: steps.includes(2.1) ? 1 : 0, pointerEvents: `${steps.includes(2.1) ? 'auto' : 'none'}` }" />
             </div>
 
-            <div class="timer-section border p-0 align-self-end">
+            <div class="timer-section border p-0 align-self-end flex-1">
                 <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent"
                     :style="{ opacity: `${sliderValue / 10}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }" />
             </div>
@@ -234,6 +232,14 @@ function resetTimer() {
     flex-direction: column;
     gap: 24px;
     height: 100%;
+}
+
+.scan-timer-section {
+    flex-wrap: wrap;
+}
+
+.scan-slider-section {
+    flex: 1;
 }
 
 .slots-section,
