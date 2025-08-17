@@ -1,37 +1,29 @@
 <template>
     <div class="quest1">
-        <div class="quest1-title">
-            <h1>Synchronize Signal Frequency</h1>
-        </div>
-
         <div class="control-panel">
-            <transition-group name="fade">
-                <div class="border" v-if="state.showWaveChart">
-                    <span class="text-xs">SIGNAL FREQUENCY</span>
-
+            <div class="border">
+                <span class="text-xs">SIGNAL FREQUENCY</span>
+                
+                <ScanlinesEffect scanline-color="rgba(0, 0, 0, 0.5)" scanline-spacing="4px">
                     <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
+                </ScanlinesEffect>
 
-                    <span class="seven-segment text-xs d-flex text-red">
-                        <span class="flex-1">
-                            TSRF: [ <span :class="{ 'text-white': Math.abs(goalPosition.x - controlPosition.x) < 1 }">{{
-                                Math.round(controlPosition.x - 25) * 3 }}</span> ]
-                        </span>
-                        <span class="flex-1">
-                            PPU: [ <span :class="{ 'text-white': Math.abs(goalPosition.y - controlPosition.y) < 1 }">{{
-                                Math.round(controlPosition.y - 25) * 900 }}</span> ]
-                        </span>
+                <span class="seven-segment text-xs d-flex text-red">
+                    <span class="flex-1">
+                        TSRF:
+                        [ <span :class="{ 'text-white': Math.abs(goalPosition.x - controlPosition.x) < 1 }">
+                            {{ Math.round(controlPosition.x - 25) * 3 }}</span> ]
                     </span>
-                </div>
+                    <span class="flex-1">
+                        PPU: [ <span :class="{ 'text-white': Math.abs(goalPosition.y - controlPosition.y) < 1 }">{{
+                            Math.round(controlPosition.y - 25) * 900 }}</span> ]
+                    </span>
+                </span>
+            </div>
 
-                <blockquote class="quest-text" v-if="state.showQuestText">
-                    <div class="question-text-portrait"></div>
-                    <p>{{ questText }}</p>
-                </blockquote>
-
-                <div class="border trackpad-border" v-if="state.showTrackPad">
-                    <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
-                </div>
-            </transition-group>
+            <div class="border trackpad-border">
+                <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
+            </div>
         </div>
     </div>
 </template>
@@ -40,6 +32,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import WaveChart from '../components/WaveChart.vue'
 import TrackPad from '../components/TrackPad.vue'
+import { useQuestStore } from '../composables/useQuestStore'
+import ScanlinesEffect from '../components/ScanlinesEffect.vue'
+
+const { steps } = useQuestStore()
 
 // Configuration object for easy maintenance
 const QUEST_CONFIG = {
@@ -53,17 +49,11 @@ const QUEST_CONFIG = {
     },
     timing: {
         waveChartDelay: 1000,
-        questTextDelay: 1500,
-        trackPadDelay: 3000,
-        questTextHideDelay: 1000,
+        trackPadDelay: 1000,
         finalDelay: 1000,
         goalAnimationDelay: 2000,
         completionDelay: 3000
     },
-    messages: {
-        initial: 'The signal is weak- but you can fix it.',
-        completed: 'Signal locked. You\'re smarter than I thought.'
-    }
 }
 
 // Animation utilities
@@ -125,14 +115,6 @@ const controlPosition = ref({ x: 0, y: 0 })
 const goalPosition = ref(QUEST_CONFIG.goal)
 const speed = ref(QUEST_CONFIG.animation.initialSpeed)
 const isFinished = ref(false)
-const questText = ref(QUEST_CONFIG.messages.initial)
-
-// Component state management
-const state = ref({
-    showWaveChart: false,
-    showQuestText: false,
-    showTrackPad: false
-})
 
 const emit = defineEmits(['questCompleted'])
 
@@ -148,7 +130,13 @@ const isWithinGoalRange = computed(() => {
 // Event handlers
 const handleControlPositionChange = (newPosition) => {
     controlPosition.value = newPosition
+
+    checkIfFinished()
 }
+
+onMounted(() => {
+    steps.value.push(1.0)
+})
 
 // Game logic
 const checkIfFinished = async () => {
@@ -169,19 +157,13 @@ const checkIfFinished = async () => {
             }
         )
 
-        // Wait and show completion message
-        await TimingService.delay(QUEST_CONFIG.timing.goalAnimationDelay)
+        steps.value.push(1.1);
 
-        state.value.showQuestText = true
-        questText.value = QUEST_CONFIG.messages.completed
+        // Wait before completing the quest
+        await TimingService.delay(QUEST_CONFIG.timing.goalAnimationDelay)
 
         // Wait and complete quest
         await TimingService.delay(QUEST_CONFIG.timing.completionDelay)
-
-        // Hide components
-        state.value.showQuestText = false
-        state.value.showTrackPad = false
-        state.value.showWaveChart = false
 
         // Emit completion event
         emit('questCompleted')
@@ -192,45 +174,6 @@ const checkIfFinished = async () => {
     }
 }
 
-// Lifecycle management
-let checkInterval
-
-const initializeQuest = async () => {
-    try {
-        await TimingService.sequence([
-            async () => {
-                await TimingService.delay(QUEST_CONFIG.timing.waveChartDelay)
-                state.value.showWaveChart = true
-            },
-            async () => {
-                await TimingService.delay(QUEST_CONFIG.timing.questTextDelay)
-                state.value.showQuestText = true
-            },
-            async () => {
-                await TimingService.delay(QUEST_CONFIG.timing.trackPadDelay)
-                state.value.showTrackPad = true
-            },
-            async () => {
-                await TimingService.delay(QUEST_CONFIG.timing.questTextHideDelay)
-                state.value.showQuestText = false
-            },
-            async () => {
-                await TimingService.delay(QUEST_CONFIG.timing.finalDelay)
-                checkInterval = setInterval(checkIfFinished, QUEST_CONFIG.checkInterval)
-            }
-        ])
-    } catch (error) {
-        console.error('Error initializing quest:', error)
-    }
-}
-
-onMounted(initializeQuest)
-
-onUnmounted(() => {
-    if (checkInterval) {
-        clearInterval(checkInterval)
-    }
-})
 </script>
 
 <style scoped>
@@ -246,7 +189,6 @@ onUnmounted(() => {
 .control-panel {
     display: flex;
     flex-direction: column;
-    align-items: center;
     width: 100%;
     height: 100%;
     gap: 2rem;
@@ -255,71 +197,5 @@ onUnmounted(() => {
 .trackpad-border {
     width: 100%;
     height: 100%;
-}
-
-.quest-text {
-    padding: 3rem 5rem;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 600;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 2;
-    width: 80%;
-    backdrop-filter: blur(4px);
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    flex-wrap: wrap;
-}
-
-.question-text-portrait {
-    flex: 0 0 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 1px solid red;
-    position: relative;
-
-    &:after {
-        content: "?";
-        font-size: 2rem;
-        font-weight: 600;
-        color: #FF0000;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.quest-text {
-    &:after {
-        /* noise/glithc effect */
-        animation: scrambled 1s ease-in-out;
-        background: url('https://picsum.photos/200/300') no-repeat center center;
-        background-size: cover;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0.5;
-    }
-}
-
-@keyframes scrambled {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
 }
 </style>

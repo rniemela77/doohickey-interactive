@@ -27,6 +27,10 @@ body {
     font-style: normal;
 }
 
+h1 {
+    font-size: clamp(1rem, 5vw, 3rem);
+}
+
 
 .text-red {
     color: red;
@@ -87,13 +91,6 @@ body {
     padding: 0 !important;
 }
 
-.container {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 
 .border {
@@ -115,6 +112,10 @@ body {
 .full-size {
     width: 100%;
     height: auto;
+}
+
+.align-self-end {
+    align-self: flex-end;
 }
 
 .column {
@@ -146,4 +147,33 @@ body {
     font-weight: 400;
     font-style: normal;
     text-transform: uppercase;
+}
+
+
+/* slideIn animation has overflow: hidden */
+.slideRight-enter-active,
+.slideRight-leave-active {
+    transition: all 0.3s ease-in-out;
+    position: absolute;
+    opacity: 1;
+}
+
+.slideRight-enter-from,
+.slideRight-leave-to {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.pulse-fade {
+    animation: pulse-fade 1s ease-in-out infinite;
+}
+
+@keyframes pulse-fade {
+    50% {
+        opacity: 0.1;
+    }
 }

@@ -2,22 +2,18 @@
     <div class="wave-chart">
         <div class="left-border"></div>
         <div class="right-border"></div>
-        <div class="top-border"></div>
-        <div class="bottom-border"></div>
+        <!-- <div class="top-border"></div>
+        <div class="bottom-border"></div> -->
 
-        <svg width="100%" height="100%" viewBox="0 0 300 200" class="wave-svg">
-
+        <svg width="100%" height="100%" viewBox="0 0 300 200" class="wave-svg" preserveAspectRatio="none">
             <!-- Wave 1 - Red -->
-            <path class="wave wave1" :d="wave1Path" fill="none" :style="{
-                opacity: 1 - (Math.abs(props.controlPosition.x - props.goalPosition.x) / 50),
-            }" />
+            <path class="wave wave1" :d="wave1Path" fill="none"/>
 
             <!-- Wave 2 - Green -->
-            <path class="wave wave2" :d="wave2Path" fill="none"
-                :style="{ opacity: 1 - (Math.abs(props.controlPosition.y - props.goalPosition.y) / 50) }" />
+            <path class="wave wave2" :d="wave2Path" fill="none"/>
 
-            <!-- Wave 3 - Blue -->
-            <path class="wave wave3" :d="wave3Path" fill="none" />
+            <!-- Wave 3 - white -->
+            <path class="wave wave3" :d="wave3Path" fill="none"/>
         </svg>
     </div>
 
@@ -40,6 +36,10 @@ const props = defineProps({
         type: Number,
         default: 0.3
     }
+})
+
+const distanceFromGoal = computed(() => {
+    return Math.sqrt(Math.pow(props.controlPosition.x - props.goalPosition.x, 2) + Math.pow(props.controlPosition.y - props.goalPosition.y, 2))
 })
 
 const time = ref(0)
@@ -112,11 +112,9 @@ onMounted(() => {
 
 <style scoped>
 .wave-chart {
-    width: 20rem;
+    width: 100%;
     height: 20rem;
-    border-radius: 8px;
     background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
     position: relative;
     overflow: hidden;
 }

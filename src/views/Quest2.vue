@@ -1,19 +1,26 @@
 <template>
     <div class="quest2">
+        <div class="row gap">
+            <div class="border d-flex row gap flex-1" style="position: relative;">
+                <BrokenGlass style="width: 50%; height: 50%; position: absolute;"></BrokenGlass>
 
-        <div class="row gap full-size">
-            <div class="border full-size">
-                <SliderControl horizontal @update-value="sliderValue = $event" label="Panel Lighting" />
+                <div class="text-xs column">
+                    Scan
+                    <FingerPrint @fingerprint="onFingerprintSuccess" />
+                </div>
+
+                <SliderControl horizontal @update-value="sliderValue = $event" label="Panel Light"
+                    :style="{ opacity: steps.includes(2.1) ? 1 : 0, pointerEvents: `${steps.includes(2.1) ? 'auto' : 'none'}` }" />
             </div>
 
-            <div class="timer-section border p-0">
+            <div class="timer-section border p-0 align-self-end">
                 <TimerHud :active="timerActive" :time="timeLeftMs" :percent="timePercent"
                     :style="{ opacity: `${sliderValue / 10}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }" />
             </div>
         </div>
 
-        <div class="border">
-            <div class="slots-section-container "
+        <div class="border flex-1">
+            <div class="slots-section-container"
                 :style="{ opacity: `${sliderValue / 10}`, pointerEvents: `${sliderValue < 8 ? 'none' : 'auto'}` }">
                 <div class="slots-section" :class="{ locked: isCompleted }" @dragover.prevent>
                     <div v-for="(slotColor, slotIndex) in slots" :key="`slot-${slotIndex}`" class="slot"
@@ -29,7 +36,9 @@
                     @drop="handleDropOnBank($event)">
                     <div v-for="(color, idx) in bankPieces" :key="`bank-${color}`" class="piece"
                         :style="{ background: colorToCss(color) }" :draggable="!isCompleted"
-                        @dragstart="handleDragStartFromBank(color, $event)" />
+                        @dragstart="handleDragStartFromBank(color, $event)">
+                        <HandDrag class="pulse-fade" style="opacity: 0.6; width: 24px; height: 24px;" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -37,11 +46,16 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import TimerHud from '../components/TimerHud.vue';
 import SliderControl from '../components/SliderControl.vue';
+import { useQuestStore } from '../composables/useQuestStore';
+import HandDrag from '../icons/HandDrag.vue';
+import BrokenGlass from '../components/BrokenGlass.vue';
+import FingerPrint from '../components/FingerPrint.vue';
 
-const sliderValue = ref(0);
+const { steps } = useQuestStore();
+
 
 const emit = defineEmits(['questCompleted']);
 
@@ -56,6 +70,27 @@ const TICK_MS = 10;
 const timerActive = ref(false);
 const timeLeftMs = ref(0);
 let timerIntervalId = null;
+
+// fingerprint step
+onMounted(() => {
+    steps.value.push(2.0);
+});
+function onFingerprintSuccess() {
+    if (!steps.value.includes(2.1)) {
+        console.log('fingerprint success');
+        steps.value.push(2.1);
+    }
+}
+
+// slider step
+const sliderValue = ref(0);
+watch(sliderValue, (val) => {
+    if (val > 8) {
+        if (!steps.value.includes(2.2)) {
+            steps.value.push(2.2);
+        }
+    }
+});
 
 function colorToCss(color) {
     if (color === 'magenta') return '#ff00ff';
@@ -197,8 +232,8 @@ function resetTimer() {
 .quest2 {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
     gap: 24px;
+    height: 100%;
 }
 
 .slots-section,
@@ -268,27 +303,10 @@ function resetTimer() {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    /* background: rgba(255, 255, 255, 0.1); */
     border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(20px) !important;
-    /* box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9); */
     cursor: grab;
-    /* position: relative; */
-    /* overflow: hidden; */
-    /* backdrop-filter: blur(20px); */
-
-    /* &::after {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        width: 100%;
-        height: 100%;
-        z-index: 21;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
-        border-radius: 50%;
-        opacity: 1;
-        transition: opacity 0.2s ease-in-out;
-    } */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

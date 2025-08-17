@@ -1,25 +1,55 @@
 <template>
-    <div class="message-container-wrapper">
-        <div class="contact-name">{{ contact }}</div>
+    <div>
+        <div class="row justify-content-end">
+            <button @click="toggleExpand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    :style="{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }">
+                    <path d="M12 19L19 12L12 5" stroke="white" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
 
-        <div class="message-container" ref="messageContainer">
-            <slot />
+        <div class="messages">
+            <transition name="slideRight">
+                <div v-if="isExpanded" class="messages-container">
+                    <div class="message-container-wrapper">
+                        <div class="contact-name">Unknown Number</div>
+
+                        <div class="message-container" ref="messageContainer">
+                            <Quest1Messages v-if="steps.includes(1.0)" />
+                            <Quest2Messages v-if="steps.includes(2.0)" />
+                        </div>
+                    </div>
+                </div>
+            </transition>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { useQuestStore } from '../composables/useQuestStore'
+import Quest1Messages from './Quest1Messages.vue'
+import Quest2Messages from './Quest2Messages.vue'
+const { steps } = useQuestStore()
+
+const props = defineProps({
+    isExpanded: {
+        type: Boolean,
+        default: true
+    }
+});
+
+const emit = defineEmits(['toggle-expand']);
+
+function toggleExpand() {
+    emit('toggle-expand', !props.isExpanded);
+}
 
 const messageContainer = ref(null);
 let observer = null;
-
-const props = defineProps({
-    contact: {
-        type: String,
-        required: true
-    }
-})
 
 // any time a new element is added, scroll to the bottom
 const scrollToBottom = () => {
@@ -75,9 +105,29 @@ onUnmounted(() => {
 defineExpose({
     scrollToBottom
 })
+
 </script>
 
 <style scoped>
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 1rem;
+    border: 1px solid white;
+    border-radius: 6px;
+}
+
+.messages {
+    height: 100%;
+    overflow: auto;
+}
+
+.messages-container {
+    max-width: 100%;
+    transition: all 0.3s ease-in-out;
+}
+
 .message-container-wrapper {
     display: flex;
     flex-direction: column;
@@ -98,7 +148,6 @@ defineExpose({
 }
 
 .message-container {
-    padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -131,7 +180,7 @@ defineExpose({
     transition: max-height 0.3s ease-in-out;
 }
 
-:deep(.conversation) > *{
+:deep(.conversation)>* {
     display: flex;
     flex-direction: column;
     gap: 10px;

@@ -80,7 +80,7 @@ onBeforeUnmount(() => {
 .grain-noise {
     position: fixed;
     /* inset is set inline so we can use `bleed` */
-    z-index: 0;
+    z-index: 100;
     /* above body bg, below content */
     pointer-events: none;
     background-repeat: repeat;

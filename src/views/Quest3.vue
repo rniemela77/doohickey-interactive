@@ -1,18 +1,5 @@
 <template>
     <div class="quest3">
-        <div class="row flex-wrap gap">
-            <div class="border">
-                <MessageContainer contact="(Unknown Number)">
-                    <Quest3Messages 
-                        :visibleSteps="visibleSteps" 
-                        @next="visibleSteps.push($event)"
-                        @canWipe="canWipe = $event" 
-                        :hasErasedHalf="hasErasedHalf"
-                        :startShowingHints="startShowingHints"
-                    />
-                </MessageContainer>
-            </div>
-
             <div 
                 :style="{ opacity: shouldShowFrostyScreen ? 1 : 0 }"
                 class="frosty-screen-container"
@@ -47,13 +34,12 @@
                     </div>
                 </FrostyScreen>
             </div>
-        </div>
+        
     </div>
 </template>
 
 <script setup>
 import KeypadControls from '../components/KeypadControls.vue';
-import MessageContainer from '../components/MessageContainer.vue';
 import Quest3Messages from '../components/Quest3Messages.vue';
 import { ref, computed } from 'vue';
 import BatteryConnectuiUI from '../components/BatteryConnectuiUI.vue'
