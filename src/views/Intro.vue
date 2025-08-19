@@ -1,7 +1,13 @@
 <template>
     <div class="loading-page">
-        <div class="border loading-container" ref="loadingContainer">
-            <button v-if="loadingStatus === 'unstarted'" @click="handleClick">START</button>
+        <div class="loading-container border" ref="loadingContainer">
+            <button v-if="loadingStatus === 'unstarted'" @click="handleClick" ref="activateButton">
+                <div class="loading-bar" style="top: 0; right: -5px; left: unset"
+                    :style="{ width: `${clickPercentage}%` }"></div>
+                ACTIVATE
+                <div class="loading-bar" :style="{ width: `${clickPercentage}%` }"></div>
+
+            </button>
 
             <div :style="{ opacity: loadingStatus === 'unstarted' ? 0 : 1, transition: 'opacity 0.9s ease-in-out' }">
                 <p class="loading-title">LOADING</p>
@@ -22,9 +28,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import cracked from '../../cracked.png'
 import { useQuestStore } from '../composables/useQuestStore'
+import { playGlassCrack, playTap, playDrone } from '../helpers/sounds'
 
 const { steps } = useQuestStore()
 
@@ -54,22 +61,79 @@ let loadingInterval = null;
 
 // when click on loadContainer, place an image at the mouse location
 const loadingContainer = ref(null);
-const hasCracked = ref(false);
 const clickCount = ref(0);
-const jiggleButton = () => {
-    loadingContainer.value.classList.add('cracked');
-    setTimeout(() => {
-        loadingContainer.value.classList.remove('cracked');
-    }, 100);
+const activateButton = ref(null);
+let jiggleTimeoutIds = [];
+
+function clearJiggle() {
+    if (jiggleTimeoutIds.length) {
+        jiggleTimeoutIds.forEach(id => clearTimeout(id));
+        jiggleTimeoutIds = [];
+    }
+    const button = activateButton.value;
+    if (button) {
+        button.style.transform = 'translate(-50%, -50%)';
+        button.style.transition = '';
+    }
 }
+
+const jiggleButton = (intensity = 1) => {
+    const button = activateButton.value;
+    if (!button) return;
+
+    // Cancel any ongoing jiggle and reset
+    clearJiggle();
+
+    const amplitudeBase = 5; // px
+    const amplitudePx = amplitudeBase * Math.max(1, intensity * 0.8);
+    const steps = [
+        { t: 0, x: 0 },
+        { t: 35, x: amplitudePx },
+        { t: 70, x: -amplitudePx },
+        { t: 105, x: amplitudePx * 0.5 },
+        { t: 140, x: 0 },
+    ];
+
+    const originalTransition = button.style.transition;
+    button.style.transition = 'transform 35ms ease-out';
+
+    steps.forEach(step => {
+        const id = setTimeout(() => {
+            button.style.transform = `translate(-50%, -50%) translateX(${step.x}px)`;
+        }, step.t);
+        jiggleTimeoutIds.push(id);
+    });
+
+    const endId = setTimeout(() => {
+        button.style.transform = 'translate(-50%, -50%)';
+        button.style.transition = originalTransition || '';
+        jiggleTimeoutIds = [];
+    }, steps[steps.length - 1].t + 50);
+    jiggleTimeoutIds.push(endId);
+}
+const clickPercentage = ref(0);
+// reduce clickPercentageby 1 every 100ms
+setInterval(() => {
+    if (clickPercentage.value > 0) {
+        clickPercentage.value -= 4;
+    }
+}, 100);
+
+
 const handleClick = async (e) => {
-    
-    if (clickCount.value < 3) {
-        jiggleButton();
-        clickCount.value++;
+    clickPercentage.value += 20;
+    playTap();
+    jiggleButton(clickPercentage.value / 100);
+
+    if (clickPercentage.value < 110) {
         return;
     }
+
     placeCrackedImage(e, 4);
+
+    playGlassCrack();
+
+    playDrone();
 
 
     loadingStatus.value = 'initializing';
@@ -89,7 +153,8 @@ const placeCrackedImage = (e, size, randomizeRotation = false) => {
     image.src = cracked;
     Object.assign(image.style, {
         position: 'absolute',
-        left: `${x + 15}px`,
+        backgroundOrigin: 'right',
+        left: `${x + 14}px`,
         rotate: randomizeRotation ? `${Math.random() * 360}deg` : '0deg',
         top: `${y}px`,
         width: `${imageSize}px`,
@@ -128,6 +193,10 @@ const completeLoading = () => {
         emit('loadingComplete');
     }, 1000);
 };
+
+onUnmounted(() => {
+    clearJiggle();
+});
 
 
 </script>
@@ -223,7 +292,6 @@ const completeLoading = () => {
 
 button {
     background: none;
-    border: none;
     color: red;
     font-size: 3rem;
     text-transform: uppercase;
@@ -237,40 +305,27 @@ button {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
 
     &:hover {
         color: white;
         text-shadow: 0 0 5px red, 0 0 10px red;
     }
-}
 
-.cracked {
-    animation: crack 0.2s ease-in-out forwards;
-}
-
-@keyframes crack {
-    0% {
-        transform: translateX(0);
-    }
-
-    10% {
-        transform: translateX(10px);
-    }
-
-    20% {
-        transform: translateX(-20px);
-    }
-
-    30% {
-        transform: translateX(10px);
-    }
-
-    40% {
-        transform: translateX(-5px);
-    }
-
-    50% {
-        transform: translateX(0);
+    .loading-bar {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: -5px;
+        width: 0;
+        height: 5px;
+        background: red;
+        z-index: -1;
+        opacity: 0.5;
+        border-radius: 10px;
+        transition: width 0.1s linear;
     }
 }
 </style>

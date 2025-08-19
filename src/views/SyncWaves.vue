@@ -43,7 +43,7 @@ const QUEST_CONFIG = {
     threshold: 3,
     checkInterval: 100,
     animation: {
-        duration: 3000,
+        duration: 2000,
         maxSpeed: 1.5,
         initialSpeed: 0.3
     },
@@ -52,7 +52,7 @@ const QUEST_CONFIG = {
         trackPadDelay: 1000,
         finalDelay: 1000,
         goalAnimationDelay: 2000,
-        completionDelay: 3000
+        completionDelay: 1000
     },
 }
 

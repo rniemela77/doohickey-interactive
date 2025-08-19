@@ -86,7 +86,7 @@ watch(sliderValue, (value) => {
 
 .slider-control.horizontal .slider-control-label {
     flex-direction: row;
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .slider-wrapper {

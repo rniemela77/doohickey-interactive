@@ -1,31 +1,29 @@
 <template>
-    <div>
-        <div class="message-expand-button row justify-content-end">
+    <div class="messages" :class="{ 'modal-open': isExpanded }">
+        <div class="message-expand-button d-flex align-items-center">
+            <p class="flex-1 m-0">
+                Messages
+            </p>
+
             <button @click="toggleExpand">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                    :style="{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }">
-                    <path d="M12 19L19 12L12 5" stroke="white" stroke-width="2" stroke-linecap="round"
+                    :style="{ transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)' }">
+                    <path d="M12 19L19 12L12 5" stroke="red" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round" />
-                    <path d="M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M5 12H19" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
             </button>
         </div>
 
-        <div class="messages">
-            <transition name="slideRight">
-                <div v-if="isExpanded" class="messages-container">
-                    <div class="message-container-wrapper">
-                        <div class="contact-name">Unknown Number</div>
+        <div v-if="isExpanded" class="modal">
+            <div class="contact-name">Unknown Number</div>
 
-                        <div class="message-container" ref="messageContainer">
-                            <Quest0Messages v-if="steps.includes(0.0)" />
-                            <Quest1Messages v-if="steps.includes(1.0)" />
-                            <Quest2Messages v-if="steps.includes(2.0)" />
-                            <Quest3Messages v-if="steps.includes(3.0)" />
-                        </div>
-                    </div>
-                </div>
-            </transition>
+            <div class="message-container" ref="messageContainer">
+                <Quest0Messages v-if="steps.includes(0.0)" />
+                <Quest1Messages v-if="steps.includes(1.0)" />
+                <Quest2Messages v-if="steps.includes(2.0)" />
+                <Quest3Messages v-if="steps.includes(3.0)" />
+            </div>
         </div>
     </div>
 </template>
@@ -43,7 +41,7 @@ const { steps } = useQuestStore()
 const props = defineProps({
     isExpanded: {
         type: Boolean,
-        default: true
+        default: false
     }
 });
 
@@ -111,129 +109,23 @@ onUnmounted(() => {
 defineExpose({
     scrollToBottom
 })
-
 </script>
 
 <style scoped>
-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 1rem;
-    border: 1px solid white;
-    border-radius: 6px;
-}
+.message-expand-button {
+    button {
+        background: transparent;
+        border: 1px solid red;
+        cursor: pointer;
+        height: 64px;
+        width: 64px;
+        transition: filter 0.15s ease-in-out;
 
-.messages {
-    height: 100%;
-    overflow: auto;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-.messages-container {
-    max-width: 100%;
-    transition: all 0.3s ease-in-out;
-}
-
-.message-container-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 0;
-    max-width: 500px;
-}
-
-.contact-name {
-    position: sticky;
-    top: 0;
-    background: rgba(255 255 255 / 0.27);
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-align: center;
-    padding: 1rem;
-}
-
-.message-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: 80vh;
-    padding-bottom: 3rem;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: red rgba(255, 0, 0, 0.2);
-}
-
-.message-container::-webkit-scrollbar {
-    background: black;
-}
-
-.message-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 0, 0, 0.2);
-    border: 1px solid red;
-}
-
-.accordion-header {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.accordion-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
-}
-
-:deep(.conversation)>* {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-:deep(.msg-you) {
-    align-self: flex-end;
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.2s ease;
-    align-self: flex-end;
-
-    &:disabled {
-        border: none;
-        cursor: default;
-        color: rgba(0 187 255 / 1);
-        background: none;
+        &:hover {
+            filter: brightness(5);
+        }
     }
 }
 
-
-:deep(.msg-them) {
-    position: relative;
-    display: inline-flex;
-    align-items: flex-start;
-    gap: 10px;
-
-    &::before {
-        content: '?';
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        flex: 0 0 20px;
-        height: 20px;
-        color: rgba(22 255 239 / 0.5);
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-    }
-}
+ 
 </style>
