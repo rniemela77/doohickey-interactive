@@ -21,13 +21,11 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['controlPositionChange'])
+const emit = defineEmits(['controlDelta'])
 
 const trackpadElementRef = ref(null)
 
 const isDragging = ref(false)
-
-const controlSpeed = ref(0.03)
 
 // Pointer positions
 const startPointerClientX = ref(0)
@@ -46,7 +44,6 @@ const velocityGain = 3 // px/s per px of displacement
 // Background offset within one tile for stability
 const backgroundOffsetX = ref(0)
 const backgroundOffsetY = ref(0)
-
 
 const normalizeOffset = (value) => {
     const modulo = ((value % backgroundTileSizePx) + backgroundTileSizePx) % backgroundTileSizePx
@@ -71,16 +68,8 @@ const step = (timestampMs) => {
     backgroundOffsetX.value = normalizeOffset(backgroundOffsetX.value + velocityX * dtSeconds)
     backgroundOffsetY.value = normalizeOffset(backgroundOffsetY.value + velocityY * dtSeconds)
 
-    // update the control position (scaled by time and configurable gain)
-    controlPosition.value.x = controlPosition.value.x + velocityX * controlSpeed.value * dtSeconds
-    controlPosition.value.y = controlPosition.value.y + velocityY * controlSpeed.value * dtSeconds
-
-    // control position must be between -100 and 100 (keep internal high precision)
-    controlPosition.value.x = Math.max(-100, Math.min(controlPosition.value.x, 100))
-    controlPosition.value.y = Math.max(-100, Math.min(controlPosition.value.y, 100))
-
-    // emit raw values for smooth consumers
-    emit('controlPositionChange', { x: controlPosition.value.x, y: controlPosition.value.y })
+    // Emit velocity and dt; parent decides how to integrate and clamp
+    emit('controlDelta', { vx: velocityX, vy: velocityY, dt: dtSeconds })
 
     animationFrameId.value = requestAnimationFrame(step)
 }
@@ -121,8 +110,6 @@ const onPointerUp = (event) => {
 }
 
 
-// this is the position that the app will use to control the wave chart
-const controlPosition = ref({ x: 0, y: 0 })
 </script>
 
 <style scoped>

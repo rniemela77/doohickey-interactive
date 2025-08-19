@@ -3,10 +3,8 @@
         <div class="control-panel">
             <div class="border">
                 <span class="text-xs">SIGNAL FREQUENCY</span>
-                
-                <ScanlinesEffect scanline-color="rgba(0, 0, 0, 0.5)" scanline-spacing="4px">
-                    <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
-                </ScanlinesEffect>
+
+                <WaveChart :control-position="controlPosition" :goal-position="goalPosition" :speed="speed" />
 
                 <span class="seven-segment text-xs d-flex text-red">
                     <span class="flex-1">
@@ -22,7 +20,7 @@
             </div>
 
             <div class="border trackpad-border">
-                <TrackPad @controlPositionChange="handleControlPositionChange" :disabled="isFinished" />
+                <TrackPad @controlDelta="handleControlDelta" :disabled="isFinished" />
             </div>
         </div>
     </div>
@@ -128,8 +126,16 @@ const isWithinGoalRange = computed(() => {
 })
 
 // Event handlers
-const handleControlPositionChange = (newPosition) => {
-    controlPosition.value = newPosition
+const CONTROL_INTEGRATION_GAIN = 0.03
+const clamp = (value, min, max) => Math.max(min, Math.min(value, max))
+const handleControlDelta = ({ vx, vy, dt }) => {
+    // integrate velocity into position with local gain and clamp
+    const nextX = controlPosition.value.x + vx * CONTROL_INTEGRATION_GAIN * dt
+    const nextY = controlPosition.value.y + vy * CONTROL_INTEGRATION_GAIN * dt
+    controlPosition.value = {
+        x: clamp(nextX, -50, 50),
+        y: clamp(nextY, -50, 50)
+    }
 
     checkIfFinished()
 }
