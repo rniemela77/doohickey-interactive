@@ -167,13 +167,14 @@ body {
 .slideRight-enter-active,
 .slideRight-leave-active {
     transition: all 0.3s ease-in-out;
-    position: absolute;
     opacity: 1;
+    transition-delay: 0.3s;
 }
 
 .slideRight-enter-from,
 .slideRight-leave-to {
-    transform: translateX(-100%);
+    transform: translateX(-2rem);
+    position: absolute;
     opacity: 0;
 }
 

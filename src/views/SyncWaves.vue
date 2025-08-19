@@ -33,7 +33,7 @@ import TrackPad from '../components/TrackPad.vue'
 import { useQuestStore } from '../composables/useQuestStore'
 import ScanlinesEffect from '../components/ScanlinesEffect.vue'
 
-const { steps } = useQuestStore()
+const { visibleMessages } = useQuestStore()
 
 // Configuration object for easy maintenance
 const QUEST_CONFIG = {
@@ -49,8 +49,8 @@ const QUEST_CONFIG = {
         waveChartDelay: 1000,
         trackPadDelay: 1000,
         finalDelay: 1000,
-        goalAnimationDelay: 2000,
-        completionDelay: 1000
+        goalAnimationDelay: 1000,
+        completionDelay: 100
     },
 }
 
@@ -140,9 +140,10 @@ const handleControlDelta = ({ vx, vy, dt }) => {
     checkIfFinished()
 }
 
-onMounted(() => {
-    steps.value.push(1.0)
-})
+// wait 10 seconds
+setTimeout(() => {
+    visibleMessages.value.push('syncwaves-hint-1');
+}, 15000);
 
 // Game logic
 const checkIfFinished = async () => {
@@ -151,6 +152,8 @@ const checkIfFinished = async () => {
     try {
         // Lock trackpad
         isFinished.value = true
+
+        visibleMessages.value.push('syncwaves-complete');
 
         // Animate to goal
         await AnimationUtils.animateToGoal(
@@ -163,7 +166,7 @@ const checkIfFinished = async () => {
             }
         )
 
-        steps.value.push(1.1);
+        visibleMessages.value.push('syncwaves-complete');
 
         // Wait before completing the quest
         await TimingService.delay(QUEST_CONFIG.timing.goalAnimationDelay)

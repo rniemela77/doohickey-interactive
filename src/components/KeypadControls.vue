@@ -29,6 +29,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { playKeypad } from '../helpers/sounds'
 
 const props = defineProps({
     interactive: {
@@ -43,6 +44,7 @@ const keypadValue = ref('')
 const correctPassword = ref('9108')
 
 const handleKeyClick = (i) => {
+    playKeypad()
     if (i === 'delete') {
         keypadValue.value = keypadValue.value.slice(0, -1)
     } else if (keypadValue.value.length < 9) {

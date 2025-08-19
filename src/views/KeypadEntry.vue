@@ -1,26 +1,33 @@
 <template>
     <div class="quest3">
         <div class="frosty-screen-container" style="height: 100%;">
-            <div class="border d-flex align-items-center">
-                <FrostyScreen :canWipe="canWipe" @erasedHalf="setErasedHalf">
-                    <div v-if="canWipe" class="control-tip-overlay">
-                        Drag to Clean
-                        <HandDrag class="drag-indicator" />
-                    </div>
+            <div class="border d-flex align-items-center justify-content-center border gap">
+                
+                    <FrostyScreen :canWipe="canWipe" @erasedHalf="setErasedHalf">
+                        <div v-if="canWipe" class="control-tip-overlay">
+                            Drag to Clean
+                            <HandDrag class="drag-indicator" />
+                        </div>
 
-                    <BatteryConnectuiUI class="battery-ui" />
+                        <BatteryConnectuiUI class="battery-ui" />
 
-                    <div class="frosty-screen-content">
-                        <KeypadControls class="keypad-controls" @wrong-password="handleWrongPassword"
-                            :interactive="isKeypadInteractive" @correct-password="correctPassword" />
-                    </div>
-                </FrostyScreen>
+                        <div class="frosty-screen-content d-flex justify-content-center">
+                            <KeypadControls class="keypad-controls" @wrong-password="handleWrongPassword"
+                                :interactive="!canWipe" @correct-password="correctPassword" />
+                        </div>
+                        <ErrorSpazzOverlay v-if="!hasErasedHalf" style="height: 100%; width: 100%; z-index: 1000; position: absolute; top: 0; left: 0;" ></ErrorSpazzOverlay>
+                    </FrostyScreen>
+
+                <div class="column wipe-buttons gap">
+                    <button @click="canWipe = true" :style="{ opacity: canWipe ? 1 : 0.3 }">Wipe</button>
+                    <button @click="canWipe = false" :style="{ opacity: canWipe ? 0.3 : 1 }">Interact</button>
+                </div>
             </div>
 
             <div class="row flex-1">
                 <div style="position: relative; overflow:hidden; height: 100%; min-height: 10rem; width: 100%;">
                     <button class="download-image-btn" @click="isImageDownloaded = true"
-                        v-if="!isImageDownloaded">DECRYPT SIGNAL</button>
+                        v-if="showImageDownloadButton && !isImageDownloaded">DECRYPT SIGNAL</button>
 
                     <PannableImage :src="StickiePassword"
                         :style="{ opacity: isImageDownloaded ? 1 : 0, pointerEvents: isImageDownloaded ? 'auto' : 'none' }" />
@@ -39,53 +46,59 @@ import { useQuestStore } from '../composables/useQuestStore'
 import HandDrag from '../icons/HandDrag.vue'
 import PannableImage from '../components/PannableImage.vue'
 import StickiePassword from '../../stickie-password.png'
-import KnobControl from '../components/KnobControl.vue';
-import DistortionEffect from '../components/DistortionEffect.vue';
+import ErrorSpazzOverlay from '../components/ErrorSpazzOverlay.vue';
+import { playSuccess, playError } from '../helpers/sounds';
 
-const { steps } = useQuestStore()
+const { visibleMessages } = useQuestStore()
 
 // Reactive state
-const canWipe = computed(() => steps.value[steps.value.length - 1] === 3.1 || steps.value[steps.value.length - 1] === 3.2);
+const canWipe = ref(true);
 const hasErasedHalf = ref(false);
+const wrongAnswers = ref(0);
 
-
-// Computed properties for cleaner template logic
-const shouldShowFrostyScreen = computed(() => steps.value.includes(3.1));
-const isKeypadInteractive = computed(() => steps.value.includes(3.3));
-
-const showImageDownloadButton = computed(() => steps.value[steps.value.length - 1] === 3.3);
+const showImageDownloadButton = computed(() => hasErasedHalf.value);
 const isImageDownloaded = ref(false);
 
 // Event handlers
+const emit = defineEmits(['questCompleted'])
 const correctPassword = () => {
-    steps.value.push(3.4);
+    playSuccess()
+    visibleMessages.value.push('keypad-entry-complete');
+    setTimeout(() => {
+        emit('questCompleted')
+    }, 1000)
 };
 
 const handleWrongPassword = () => {
+    playError()
     if (!isImageDownloaded.value) {
         return;
     }
-    if (steps.value[steps.value.length - 1] === 3.3) {
-        steps.value.push(3.31);
-    } else if (steps.value[steps.value.length - 1] === 3.32) {
-        steps.value.push(3.33);
+    wrongAnswers.value += 1;
+    if (wrongAnswers.value > 1) {
+        visibleMessages.value.push('keypad-entry-hint-1');
     }
 };
 
 const setErasedHalf = () => {
-    console.log('setErasedHalf');
     hasErasedHalf.value = true;
 };
 
+// when image downloaded, set canWipe to false
+watch(isImageDownloaded, (newIsImageDownloaded) => {
+    if (newIsImageDownloaded) {
+        canWipe.value = false;
+    }
+});
+
 onMounted(() => {
-    steps.value.push(3.0);
+    visibleMessages.value.push('sludge-start');
 });
 
 // if hasErasedHalf, set 3.2
 watch(hasErasedHalf, (newHasErasedHalf) => {
     if (newHasErasedHalf) {
-        console.log('hasErasedHalf', newHasErasedHalf);
-        steps.value.push(3.2);
+        visibleMessages.value.push('sludge-end');
     }
 });
 </script>
@@ -219,5 +232,21 @@ watch(hasErasedHalf, (newHasErasedHalf) => {
         animation: none;
         color: white;
     }
+}
+
+.wipe-buttons {
+    width: 100px;
+
+    button {
+        font-size: 1.2rem;
+        padding: 1rem;
+        border: 1px solid red;
+        color: red;
+        background: none;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
 }
 </style>

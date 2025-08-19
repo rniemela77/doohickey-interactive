@@ -4,8 +4,7 @@
         <div class="flex-wrap row gap d-flex">
             <!-- slider -->
             <div class="border d-flex row gap flex-2">
-                <SliderControl horizontal @update-value="sliderValue = $event" label="Panel Light"
-                    :class="{ 'opacity-100 pointer-auto': steps.includes(QUEST_STEPS.sliderVisible), 'opacity-0 pointer-none': !steps.includes(QUEST_STEPS.sliderVisible) }" />
+                <SliderControl horizontal @update-value="sliderValue = $event" label="Panel Light" />
             </div>
 
             <!-- timer -->
@@ -31,11 +30,10 @@ import { useQuestStore } from '../composables/useQuestStore';
 import CircleMatcher from '../components/CircleMatcher.vue';
 import { useCountdownTimer } from '../composables/useCountdownTimer';
 
-const { steps } = useQuestStore();
+const { visibleMessages } = useQuestStore();
 
 onMounted(() => {
-    ensureStep(QUEST_STEPS.shown);
-    ensureStep(QUEST_STEPS.sliderVisible);
+    visibleMessages.value.push('pre-matching-dots');
 });
 onUnmounted(() => {
     resetTimer();
@@ -63,13 +61,9 @@ const panelInteractivityStyle = computed(() => ({
 }));
 watch(sliderValue, (val) => {
     if (val > SLIDER_ENABLE_THRESHOLD) {
-        ensureStep(QUEST_STEPS.enabled);
+        visibleMessages.value.push('matching-dots-start');
     }
 });
-
-function ensureStep(step) {
-    if (!steps.value.includes(step)) steps.value.push(step);
-}
 
 function waitMs(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -79,6 +73,7 @@ function waitMs(ms) {
 onExpire(() => {
     if (circleRef.value && typeof circleRef.value.clearBoard === 'function') {
         circleRef.value.clearBoard();
+        visibleMessages.value.push('matching-dots-hint-1');
     }
     resetTimer();
 });
@@ -93,6 +88,7 @@ function onBoardEmptied() {
 }
 
 async function onBoardCompleted() {
+    visibleMessages.value.push('matching-dots-complete');
     resetTimer();
     await waitMs(2000);
     emit('questCompleted');

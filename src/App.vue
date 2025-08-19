@@ -58,7 +58,7 @@ const quests = [
     'quest5',
 ]
 
-const currentQuest = ref(quests[1]);
+const currentQuest = ref(quests[4]);
 
 function completeQuest() {
     const nextQuest = quests[quests.indexOf(currentQuest.value) + 1];

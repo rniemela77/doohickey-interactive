@@ -1,17 +1,20 @@
 <template>
     <div class="d-flex justify-space-between gap flex-wrap">
-        <div class="d-flex flex-1 border pannable-image">
-            <DistortionEffect :freqX="Math.abs(distortionFreqY) + 0.02" :freqY="Math.abs(distortionFreqY)" :scale="60">
-                <img :src="src" width="150px"
-                    :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
-                    @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
-            </DistortionEffect>
-        </div>
-
         <div class="border d-flex column gap">
             <KnobControl :min="-0.09" :max="0.09" :step="0.01" v-model="distortionFreqY" />
 
             <button class="reset-btn" @click="resetImage">RESET</button>
+        </div>
+
+        <div class="d-flex flex-1 border pannable-image">
+            <HandDrag class="hand-drag-icon pulse-fade" v-if="!isDragging"/>
+            <ScanlinesEffect :opacity="0.1" :scanlineSpacing="4" :scanlineThickness="1" scanlineBlend="multiply" class="w-100">
+                <DistortionEffect :freqX="Math.abs(distortionFreqY)" :freqY="Math.abs(distortionFreqY)" :scale="60">
+                    <img :src="src" width="150px"
+                        :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
+                        @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
+                </DistortionEffect>
+            </ScanlinesEffect>
         </div>
     </div>
 </template>
@@ -20,6 +23,8 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import DistortionEffect from './DistortionEffect.vue';
 import KnobControl from './KnobControl.vue';
+import ScanlinesEffect from './ScanlinesEffect.vue';
+import HandDrag from '../icons/HandDrag.vue';
 
 const props = defineProps({
     src: {
@@ -151,5 +156,19 @@ img {
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.5);
     }
+}
+
+.hand-drag-icon {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: 100%;
+    height: 100%;
+    filter: brightness(2);
+    z-index:1;
+    height: 50px;
+    width: 50px;
+    opacity: 0.15;
+    pointer-events: none;
 }
 </style>

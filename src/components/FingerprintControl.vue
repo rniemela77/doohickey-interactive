@@ -30,6 +30,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { playScan, playSuccess } from '../helpers/sounds';
 import HandDrag from '../icons/HandDrag.vue';
 import Fingerprint from '../icons/Fingerprint.vue';
 
@@ -40,13 +41,19 @@ const isSuccess = ref(false);
 let holdTimerId = null;
 
 const emit = defineEmits(['fingerprint']);
+let scanAudio = null;
 
 function onPressStart(e) {
     e.preventDefault();
     e.stopPropagation();
     isPressed.value = true;
+
+    // play audio
+    scanAudio = playScan();
+
     clearHoldTimer();
     holdTimerId = setTimeout(() => {
+        playSuccess();
         // success only if still held
         if (isPressed.value) {
             isSuccess.value = true;
@@ -62,11 +69,15 @@ function onPressStart(e) {
 function onPressEnd(e) {
     e.preventDefault();
     e.stopPropagation();
+
     // If released before timer fires, cancel and reset state
     if (holdTimerId) {
         clearHoldTimer();
     }
     isPressed.value = false;
+
+    // stop audio
+    scanAudio.pause();
 }
 
 function onPressCancel(e) {

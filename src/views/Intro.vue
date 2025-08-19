@@ -1,29 +1,31 @@
 <template>
     <div class="loading-page">
-        <div class="loading-container border" ref="loadingContainer">
-            <button v-if="loadingStatus === 'unstarted'" @click="handleClick" ref="activateButton">
-                <div class="loading-bar" style="top: 0; right: -5px; left: unset"
-                    :style="{ width: `${clickPercentage}%` }"></div>
-                ACTIVATE
-                <div class="loading-bar" :style="{ width: `${clickPercentage}%` }"></div>
+        <transition name="fade">
+            <div class="loading-container border" ref="loadingContainer" v-if="startUi">
+                <button v-if="loadingStatus === 'unstarted'" @click="handleClick" ref="activateButton">
+                    <div class="loading-bar" style="top: 0; right: -5px; left: unset"
+                        :style="{ width: `${clickPercentage}%` }"></div>
+                    ACTIVATE
+                    <div class="loading-bar" :style="{ width: `${clickPercentage}%` }"></div>
+                </button>
 
-            </button>
+                <div
+                    :style="{ opacity: loadingStatus === 'unstarted' ? 0 : 1, transition: 'opacity 0.9s ease-in-out' }">
+                    <p class="loading-title">LOADING</p>
 
-            <div :style="{ opacity: loadingStatus === 'unstarted' ? 0 : 1, transition: 'opacity 0.9s ease-in-out' }">
-                <p class="loading-title">LOADING</p>
+                    <div class="loading-bar">
+                        <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
+                            :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+                    </div>
 
-                <div class="loading-bar">
-                    <div v-for="i in loadingBarMax" :key="i" class="loading-dot"
-                        :class="{ 'loading-dot-active': loadingBar >= i }"></div>
+                    <p class="loading-subtitle">
+                        <span :class="{ 'red': loadingStatus === 'initializing' }">Initializing</span>
+                        <span :class="{ 'red': loadingStatus === 'loading' }">Installing</span>
+                        <span :class="{ 'red': loadingStatus === 'complete' }">Ready</span>
+                    </p>
                 </div>
-
-                <p class="loading-subtitle">
-                    <span :class="{ 'red': loadingStatus === 'initializing' }">Initializing</span>
-                    <span :class="{ 'red': loadingStatus === 'loading' }">Installing</span>
-                    <span :class="{ 'red': loadingStatus === 'complete' }">Ready</span>
-                </p>
             </div>
-        </div>
+        </transition>
     </div>
 </template>
 
@@ -33,13 +35,21 @@ import cracked from '../../cracked.png'
 import { useQuestStore } from '../composables/useQuestStore'
 import { playGlassCrack, playTap, playDrone } from '../helpers/sounds'
 
-const { steps } = useQuestStore()
+const { visibleMessages } = useQuestStore()
+
+const startUi = ref(false);
 
 onMounted(() => {
     // wait 1s
     setTimeout(() => {
-        steps.value.push(0.0);
+        visibleMessages.value.push('pre-activation');
     }, 1000);
+
+    // wait 1s
+    setTimeout(() => {
+        // show activate button
+        startUi.value = true;
+    }, 2000);
 });
 
 
@@ -137,11 +147,11 @@ const handleClick = async (e) => {
 
 
     loadingStatus.value = 'initializing';
+    visibleMessages.value.push('pre-loading');
     await new Promise(resolve => setTimeout(resolve, LOADING_CONFIG.INITIAL_DELAY));
     loadingStatus.value = 'loading';
 
     startLoading();
-    steps.value.push(0.1);
 };
 const placeCrackedImage = (e, size, randomizeRotation = false) => {
     const imageSize = 50 * size;

@@ -51,6 +51,7 @@ export default {
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    width: 100%;
 }
 
 .crt__content {

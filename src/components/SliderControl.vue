@@ -20,6 +20,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { playSlider } from '../helpers/sounds';
 
 const sliderValue = ref(0);
 
@@ -46,6 +47,7 @@ const inputStyle = computed(() => {
 
 const emit = defineEmits(['updateValue']);
 watch(sliderValue, (value) => {
+    playSlider();
     emit('updateValue', value);
 });
 

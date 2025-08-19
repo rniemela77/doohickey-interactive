@@ -8,7 +8,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { playCorruption } from '../helpers/sounds';
 
 const props = defineProps({
     canWipe: {
@@ -20,6 +21,10 @@ const frostyEl = ref(null);
 const frostyCanvas = ref(null);
 const emit = defineEmits(['erasedHalf']);
 
+let corruptionAudio = null;
+
+
+
 let canvasCtx = null;
 let isErasing = false;
 let lastPoint = null;
@@ -27,11 +32,40 @@ let resizeObserver = null;
 let lastStampPoint = null;
 let nextStampStepPx = 0;
 let nextStampRadiusPx = 0;
-const brushRadiusBasePx = 50; // base brush radius in CSS pixels
-const brushRadiusVarianceRatio = 0.1; // random +/- variance applied to base radius
+const brushRadiusBasePx = 70; // base brush radius in CSS pixels
+const brushRadiusVarianceRatio = 0.2; // random +/- variance applied to base radius
 const brushSoftEdgeRatio = 0.0000000000000000001; // larger value = harder edge
 const brushSpacingBaseRatio = 0.4; // base spacing between stamps relative to radius
 const brushSpacingVarianceRatio = 0.1; // random +/- variance added to base per stamp
+
+// --- Color & texture tuning (easy to tweak) ---
+// Slightly desaturated deep red base with room for variation
+const ICE_BASE_RGB = { r: 140, g: 20, b: 30 };
+// Ensure MIN <= MAX so clamps work as intended
+const ICE_MIN_RGB = { r: 50, g: 10, b: 20 };
+const ICE_MAX_RGB = { r: 220, g: 60, b: 70 };
+const ICE_VARIATION_RANGE = 50; // +/- range added to base per pixel
+
+// Dark highlights (used with 'multiply' for black dots)
+const HIGHLIGHT_RGB = { r: 0, g: 0, b: 0 };
+
+// Fog & speckle controls
+const FOG_BLOB_COUNT = 14;            // Larger soft clouds
+const FOG_BLOB_MAX_RADIUS_RATIO = 0.22; // Max radius relative to min(width, height)
+const FOG_BLOB_MIN_RADIUS_RATIO = 0.08;
+const FOG_BLOB_ALPHA = 0.05;          // Per-blob opacity (very subtle, layers add up)
+const FOG_BLOB_BLUR_PX = 2;          // Soft blur for clouds
+
+const POCK_MARK_COUNT = 120;          // Tiny pits in the frost
+const POCK_MIN_RADIUS = 2;
+const POCK_MAX_RADIUS = 15;
+const POCK_RING_DARKEN_ALPHA = 0.15;  // Ring darkening around pits
+
+const SPECKLE_COUNT = 200;           // Pepper noise for odd visuals
+const SPECKLE_ALPHA = 0.6;
+
+// Eraser gradient color (alpha is controlled where used)
+const ERASER_RGB = { r: 0, g: 0, b: 0 };
 
 // Counter to limit how often we check the erased area
 let eraseCheckCounter = 0;
@@ -127,10 +161,10 @@ function drawVariedIce(width, height) {
                 const noiseVal = improvedNoise(x * scale, y * scale);
 
                 // Add subtle color variation for more realistic ice
-                const blueVariation = (Math.random() - 0.5) * 20;
-                const r = Math.max(150, Math.min(200, 173 + blueVariation));
-                const g = Math.max(200, Math.min(230, 216 + blueVariation));
-                const b = Math.max(220, Math.min(250, 230 + blueVariation));
+                const variation = (Math.random() - 0.5) * ICE_VARIATION_RANGE;
+                const r = Math.max(ICE_MIN_RGB.r, Math.min(ICE_MAX_RGB.r, ICE_BASE_RGB.r + variation));
+                const g = Math.max(ICE_MIN_RGB.g, Math.min(ICE_MAX_RGB.g, ICE_BASE_RGB.g + variation));
+                const b = Math.max(ICE_MIN_RGB.b, Math.min(ICE_MAX_RGB.b, ICE_BASE_RGB.b + variation));
 
                 // Vary opacity based on noise and layer
                 const layerOpacity = baseOpacity * (0.8 + noiseVal * 0.4);
@@ -152,19 +186,100 @@ function drawVariedIce(width, height) {
     // Top layer - thin frost with more variation
     drawIceLayer(0.4, 0.2, 3.0);
 
-    // Add some crystalline highlights
-    canvasCtx.globalCompositeOperation = 'screen';
-    for (let i = 0; i < 50; i++) {
+    // Add some crystalline highlights (now dark/black dots)
+    canvasCtx.globalCompositeOperation = 'multiply';
+    for (let i = 0; i < 70; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
-        const size = Math.random() * 3 + 1;
-        const opacity = Math.random() * 0.3 + 0.1;
+        const size = Math.random() * 2.5 + 0.8;
+        const opacity = Math.random() * 0.25 + 0.08;
 
-        canvasCtx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        canvasCtx.fillStyle = `rgba(${HIGHLIGHT_RGB.r}, ${HIGHLIGHT_RGB.g}, ${HIGHLIGHT_RGB.b}, ${opacity})`;
         canvasCtx.beginPath();
         canvasCtx.arc(x, y, size, 0, Math.PI * 2);
         canvasCtx.fill();
     }
+
+    // Subtle foggy cloud blobs
+    (function drawFogBlobs() {
+        const minSide = Math.max(1, Math.min(width, height));
+        const rMin = minSide * FOG_BLOB_MIN_RADIUS_RATIO;
+        const rMax = Math.max(rMin + 1, minSide * FOG_BLOB_MAX_RADIUS_RATIO);
+        canvasCtx.save();
+        try {
+            canvasCtx.filter = `blur(${FOG_BLOB_BLUR_PX}px)`;
+        } catch (_) { /* filter may not be supported */ }
+        canvasCtx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < FOG_BLOB_COUNT; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = rMin + Math.random() * (rMax - rMin);
+            const grad = canvasCtx.createRadialGradient(x, y, 0, x, y, r);
+            const alpha = FOG_BLOB_ALPHA * (0.6 + Math.random() * 0.8);
+            grad.addColorStop(0, `rgba(255,255,255,${alpha})`);
+            grad.addColorStop(1, `rgba(255,255,255,0)`);
+            canvasCtx.fillStyle = grad;
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, r, 0, Math.PI * 2);
+            canvasCtx.fill();
+        }
+        canvasCtx.restore();
+    })();
+
+    // Tiny pock marks / spock-marks
+    (function drawPockMarks() {
+        for (let i = 0; i < POCK_MARK_COUNT; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = POCK_MIN_RADIUS + Math.random() * (POCK_MAX_RADIUS - POCK_MIN_RADIUS);
+
+            // Darken ring using multiply for a crater rim
+            canvasCtx.save();
+            canvasCtx.globalCompositeOperation = 'multiply';
+            canvasCtx.strokeStyle = `rgba(60, 10, 10, ${POCK_RING_DARKEN_ALPHA})`;
+            canvasCtx.lineWidth = 1 + Math.random() * 1.2;
+            canvasCtx.beginPath();
+            canvasCtx.arc(x, y, r, 0, Math.PI * 2);
+            canvasCtx.stroke();
+            canvasCtx.restore();
+
+            // Occasional inner dark core for depth
+            if (Math.random() < 0.45) {
+                canvasCtx.save();
+                canvasCtx.globalCompositeOperation = 'multiply';
+                const innerR = Math.max(0.5, r * (0.3 + Math.random() * 0.4));
+                const grad = canvasCtx.createRadialGradient(x, y, 0, x, y, innerR);
+                grad.addColorStop(0, `rgba(20,5,5,0.14)`);
+                grad.addColorStop(1, `rgba(20,5,5,0)`);
+                canvasCtx.fillStyle = grad;
+                canvasCtx.beginPath();
+                canvasCtx.arc(x, y, innerR, 0, Math.PI * 2);
+                canvasCtx.fill();
+                canvasCtx.restore();
+            }
+        }
+    })();
+
+    // Speckle noise for odd visuals
+    (function drawSpeckle() {
+        canvasCtx.save();
+        const prevGCO = canvasCtx.globalCompositeOperation;
+        try {
+            canvasCtx.globalCompositeOperation = 'overlay';
+        } catch (_) {
+            // Fallback for browsers that don't support 'overlay'
+            canvasCtx.globalCompositeOperation = 'multiply';
+        }
+        for (let i = 0; i < SPECKLE_COUNT; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const alpha = SPECKLE_ALPHA * (0.6 + Math.random() * 0.8);
+            canvasCtx.fillStyle = `rgba(40,10,10,${alpha})`;
+            const size = Math.random() < 0.85 ? 1 : 2; // mostly single-pixel specks
+            canvasCtx.fillRect(x, y, size, size);
+        }
+        canvasCtx.restore();
+    })();
 
     // Reset composite operation
     canvasCtx.globalCompositeOperation = 'source-over';
@@ -184,9 +299,9 @@ function eraseDot(x, y, radiusPx) {
     canvasCtx.globalCompositeOperation = 'destination-out';
     const innerR = Math.max(0, radiusPx * brushSoftEdgeRatio);
     const grad = canvasCtx.createRadialGradient(x, y, 0, x, y, radiusPx);
-    grad.addColorStop(0, 'rgba(0,0,0,1)');
-    grad.addColorStop(Math.min(1, innerR / radiusPx), 'rgba(0,0,0,1)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    grad.addColorStop(0, `rgba(${ERASER_RGB.r},${ERASER_RGB.g},${ERASER_RGB.b},1)`);
+    grad.addColorStop(Math.min(1, innerR / radiusPx), `rgba(${ERASER_RGB.r},${ERASER_RGB.g},${ERASER_RGB.b},1)`);
+    grad.addColorStop(1, `rgba(${ERASER_RGB.r},${ERASER_RGB.g},${ERASER_RGB.b},0)`);
     canvasCtx.fillStyle = grad;
     canvasCtx.beginPath();
     canvasCtx.arc(x, y, radiusPx, 0, Math.PI * 2);
@@ -230,7 +345,6 @@ function stampToward(toPoint) {
         ux = dx / dist;
         uy = dy / dist;
     }
-
     // Check if half the screen has been erased after each stamp
     checkErasedArea();
 }
@@ -302,7 +416,8 @@ function checkErasedArea() {
 
     // Set hasErasedHalf to true if more than 40% of the screen is transparent
     // (allowing for some variance since we're sampling pixels)
-    if (transparentPercentage > 60) {
+    if (transparentPercentage > 80) {
+        corruptionAudio.fadeOut();
         emit('erasedHalf', true);
     }
 }
@@ -321,9 +436,17 @@ onMounted(() => {
     if (frostyEl.value) resizeObserver.observe(frostyEl.value);
     window.addEventListener('orientationchange', setupCanvas);
     window.addEventListener('resize', setupCanvas);
+
+    // hack
+    setTimeout(() => {
+        corruptionAudio = playCorruption();
+    }, 1000);
 });
 
 onBeforeUnmount(() => {
+    if (corruptionAudio) {
+        corruptionAudio.stop();
+    }
     const canvas = frostyCanvas.value;
     if (canvas) {
         canvas.removeEventListener('pointerdown', onPointerDown);
@@ -351,7 +474,6 @@ onBeforeUnmount(() => {
 
 .frosty-screen {
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 10px;
     padding: 1rem;
     position: relative;

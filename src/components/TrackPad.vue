@@ -13,6 +13,7 @@
 import { ref, computed, watch } from 'vue'
 import { defineEmits } from 'vue'
 import HandIcon from '../icons/HandDrag.vue'
+import { playRolling } from '../helpers/sounds';
 
 const props = defineProps({
     disabled: {
@@ -26,6 +27,21 @@ const emit = defineEmits(['controlDelta'])
 const trackpadElementRef = ref(null)
 
 const isDragging = ref(false)
+let draggingAudio = null;
+
+watch(isDragging, (newVal) => {
+    if (newVal) {
+        draggingAudio = playRolling();  
+        draggingAudio.addEventListener('timeupdate', () => {
+            if (draggingAudio.currentTime > 1.7) {
+                draggingAudio.currentTime = 0.2;
+            }
+        });
+        draggingAudio.playbackRate = 1;
+    } else {
+        draggingAudio.pause();
+    }
+})
 
 // Pointer positions
 const startPointerClientX = ref(0)

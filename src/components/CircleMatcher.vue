@@ -28,6 +28,7 @@
 import { ref, computed, watch, defineProps, defineEmits, defineExpose, onBeforeUnmount } from 'vue';
 import ColorPiece from './ColorPiece.vue';
 import HandDrag from '../icons/HandDrag.vue';
+import { playSuccessPickup, playSuccessPlop } from '../helpers/sounds';
 
 const props = defineProps({
 	panelStyle: { type: Object, default: () => ({}) }
@@ -72,10 +73,12 @@ function setSlotRef(el, index) {
 }
 
 function handlePointerDownFromBank(index, color, event) {
+    playSuccessPickup();
 	startDrag({ source: DND_SOURCE.bank, fromIndex: index, color }, event);
 }
 
 function handlePointerDownFromSlot(slotIndex, color, event) {
+    playSuccessPickup();
 	startDrag({ source: DND_SOURCE.slot, fromIndex: slotIndex, color }, event);
 }
 
@@ -118,9 +121,10 @@ function onPointerUp(event) {
 			slots.value[targetSlot] = ds.color;
 			// Remove the dragged bank piece by its original index when possible to avoid removing wrong duplicate
 			if (typeof ds.fromIndex === 'number' && bankPieces.value[ds.fromIndex] === ds.color) {
-				bankPieces.value.splice(ds.fromIndex, 1);
+
+                bankPieces.value.splice(ds.fromIndex, 1);
 			} else {
-				removeFirst(bankPieces, ds.color);
+                removeFirst(bankPieces, ds.color);
 			}
 		} else if (ds.source === DND_SOURCE.slot) {
 			const fromIndex = ds.fromIndex;
@@ -142,6 +146,11 @@ function onPointerUp(event) {
 			if (isBoardEmpty()) emit('emptied');
 		}
 	}
+
+    // if it was placed in the correct slot, play the success plop
+    if (targetSlot !== null && slots.value[targetSlot] === TARGET_ORDER[targetSlot]) {
+        playSuccessPlop();
+    }
 
 	cleanupDrag();
 }
@@ -174,14 +183,6 @@ function clearBoard() {
 	const colorsToReturn = slots.value.filter((c) => !!c);
 	if (colorsToReturn.length) bankPieces.value.push(...colorsToReturn);
 	slots.value = Array(TARGET_ORDER.length).fill(null);
-}
-
-function safeParse(str) {
-	try {
-		return JSON.parse(str);
-	} catch {
-		return null;
-	}
 }
 
 function isBoardEmpty() {
