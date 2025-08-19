@@ -19,6 +19,7 @@
     position: relative;
     overflow: hidden;
     pointer-events: none;
+    z-index: 1000;
 }
 
 .blocks {
@@ -92,7 +93,7 @@ span {
     position: absolute;
     bottom: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 2;
     animation: error-spazz 0.4s infinite;
 }
 

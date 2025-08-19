@@ -1,5 +1,5 @@
 <template>
-    <img src="../../cracked.png" alt="Broken Glass" class="broken-glass" />
+    <img src="/assets/images/cracked.png" alt="Broken Glass" class="broken-glass" />
 </template>
 
 <script setup>

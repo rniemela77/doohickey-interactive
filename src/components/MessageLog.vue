@@ -111,6 +111,12 @@ defineExpose({
 </script>
 
 <style scoped>
+p {
+    font-size: 1.1rem;
+    letter-spacing: 0.1rem;
+    font-family: sans-serif;
+}
+
 .message-expand-button {
     button {
         background: transparent;
@@ -118,6 +124,7 @@ defineExpose({
         cursor: pointer;
         height: 64px;
         width: 64px;
+        flex: 0 0 64px;
         transition: filter 0.15s ease-in-out;
 
         &:hover {

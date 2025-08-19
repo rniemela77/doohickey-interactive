@@ -54,7 +54,7 @@ const questText = [
   {
     // loud crackle, sludge comes down
     id: "sludge-start",
-    text: "Corruption detected- quickly, wipe it out!"
+    text: "You've been detected. Quickly- wipe out the corruption!"
   },
   {
     id: "sludge-end",

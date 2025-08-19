@@ -1,11 +1,11 @@
 export const playGlassCrack = () => {
-  const audio = new Audio("../../glass_crack.mp3");
+  const audio = new Audio("/assets/sounds/glass_crack.mp3");
   audio.playbackRate = 1.5;
   audio.play();
 };
 
 export const playTap = () => {
-  const audio = new Audio("../../tap.mp3");
+  const audio = new Audio("/assets/sounds/tap.mp3");
   audio.currentTime = 0.33;
   audio.volume = 0.5;
   audio.playbackRate = 2;
@@ -13,7 +13,7 @@ export const playTap = () => {
 };
 
 export const playDrone = () => {
-  const audio = new Audio("../../mystery-drone.mp3");
+  const audio = new Audio("/assets/sounds/mystery-drone.mp3");
   audio.volume = 0.2;
   audio.play();
 
@@ -26,7 +26,7 @@ export const playDrone = () => {
 };
 
 export const playScan = () => {
-  const audio = new Audio("../../scanning.mp3");
+  const audio = new Audio("/assets/sounds/scanning.mp3");
   audio.volume = 0.2;
   audio.play();
 
@@ -34,14 +34,14 @@ export const playScan = () => {
 };
 
 export const playSuccess = () => {
-  const audio = new Audio("../../success.mp3");
+  const audio = new Audio("/assets/sounds/success.mp3");
   audio.volume = 0.2;
   audio.playbackRate = 1.9;
   audio.play();
 };
 
 export const playRolling = () => {
-  const audio = new Audio("../../rolling.mp3");
+  const audio = new Audio("/assets/sounds/rolling.mp3");
   audio.volume = 0.2;
   audio.play();
 
@@ -49,7 +49,7 @@ export const playRolling = () => {
 };
 
 export const playSlider = () => {
-  const audio = new Audio("../../slider.mp3");
+  const audio = new Audio("/assets/sounds/slider.mp3");
   audio.volume = 0.2;
   audio.playbackRate = 2;
   audio.play();
@@ -65,13 +65,13 @@ export const playSlider = () => {
 };
 
 export const playSuccessPlop = () => {
-  const audio = new Audio("../../success-plop.mp3");
+  const audio = new Audio("/assets/sounds/success-plop.mp3");
   audio.volume = 0.2;
   audio.play();
 };
 
 export const playSuccessPickup = () => {
-  const audio = new Audio("../../success-plop.mp3");
+  const audio = new Audio("/assets/sounds/success-plop.mp3");
   audio.volume = 0.1;
   audio.playbackRate = 3;
 
@@ -85,12 +85,12 @@ export const playSuccessPickup = () => {
 };
 
 export const playCorruption = () => {
-  const audio1 = new Audio("../../rolling.mp3");
+  const audio1 = new Audio("/assets/sounds/rolling.mp3");
   audio1.volume = 0.1;
   audio1.playbackRate = 0.1;
   audio1.loop = true;
 
-  const audio2 = new Audio("../../scanning.mp3");
+  const audio2 = new Audio("/assets/sounds/scanning.mp3");
   audio2.volume = 0.05;
   audio2.playbackRate = 0.1;
   audio2.loop = true;
@@ -136,7 +136,7 @@ export const playCorruption = () => {
 };
 
 export const playKeypad = () => {
-  const audio = new Audio("../../tap-confirm.mp3");
+  const audio = new Audio("/assets/sounds/tap-confirm.mp3");
   audio.volume = 0.2;
   audio.play();
 
@@ -150,7 +150,13 @@ export const playKeypad = () => {
 };
 
 export const playError = () => {
-  const audio = new Audio("../../error.mp3");
+  const audio = new Audio("/assets/sounds/error.mp3");
+  audio.volume = 0.2;
+  audio.play();
+};
+
+export const playAlert = () => {
+  const audio = new Audio("/assets/sounds/alert.mp3");
   audio.volume = 0.2;
   audio.play();
 };

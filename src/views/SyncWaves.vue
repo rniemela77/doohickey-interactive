@@ -31,7 +31,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import WaveChart from '../components/WaveChart.vue'
 import TrackPad from '../components/TrackPad.vue'
 import { useQuestStore } from '../composables/useQuestStore'
-import ScanlinesEffect from '../components/ScanlinesEffect.vue'
+import { playSuccess } from '../helpers/sounds'
 
 const { visibleMessages } = useQuestStore()
 
@@ -154,6 +154,8 @@ const checkIfFinished = async () => {
         isFinished.value = true
 
         visibleMessages.value.push('syncwaves-complete');
+
+        playSuccess();
 
         // Animate to goal
         await AnimationUtils.animateToGoal(

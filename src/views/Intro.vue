@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import cracked from '../../cracked.png'
+import cracked from '/assets/images/cracked.png'
 import { useQuestStore } from '../composables/useQuestStore'
 import { playGlassCrack, playTap, playDrone } from '../helpers/sounds'
 

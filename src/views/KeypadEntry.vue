@@ -1,24 +1,28 @@
 <template>
     <div class="quest3">
+        <div class="invert-overlay pulse-fade" v-if="!hasErasedHalf"></div>
+
         <div class="frosty-screen-container" style="height: 100%;">
-            <div class="border d-flex align-items-center justify-content-center border gap">
-                
-                    <FrostyScreen :canWipe="canWipe" @erasedHalf="setErasedHalf">
-                        <div v-if="canWipe" class="control-tip-overlay">
-                            Drag to Clean
-                            <HandDrag class="drag-indicator" />
-                        </div>
+            <div class="border d-flex align-items-center justify-content-center border gap flex-wrap wrap-reverse">
+                <FrostyScreen :canWipe="canWipe" @erasedHalf="setErasedHalf">
+                    <div v-if="canWipe" class="control-tip-overlay">
+                        Drag to Clean
+                        <HandDrag class="drag-indicator" />
+                    </div>
 
-                        <BatteryConnectuiUI class="battery-ui" />
+                    <BatteryConnectuiUI class="battery-ui" />
 
-                        <div class="frosty-screen-content d-flex justify-content-center">
-                            <KeypadControls class="keypad-controls" @wrong-password="handleWrongPassword"
-                                :interactive="!canWipe" @correct-password="correctPassword" />
-                        </div>
-                        <ErrorSpazzOverlay v-if="!hasErasedHalf" style="height: 100%; width: 100%; z-index: 1000; position: absolute; top: 0; left: 0;" ></ErrorSpazzOverlay>
-                    </FrostyScreen>
+                    <div class="frosty-screen-content d-flex justify-content-center">
+                        <KeypadControls class="keypad-controls" @wrong-password="handleWrongPassword"
+                            :interactive="!canWipe" @correct-password="correctPassword" />
+                    </div>
 
-                <div class="column wipe-buttons gap">
+                    <ErrorSpazzOverlay v-if="!hasErasedHalf"
+                        style="height: 100%; width: 100%; z-index: 1000; position: absolute; top: 0; left: 0;">
+                    </ErrorSpazzOverlay>
+                </FrostyScreen>
+
+                <div class="wipe-buttons row gap">
                     <button @click="canWipe = true" :style="{ opacity: canWipe ? 1 : 0.3 }">Wipe</button>
                     <button @click="canWipe = false" :style="{ opacity: canWipe ? 0.3 : 1 }">Interact</button>
                 </div>
@@ -45,9 +49,9 @@ import FrostyScreen from '../components/FrostyScreen.vue';
 import { useQuestStore } from '../composables/useQuestStore'
 import HandDrag from '../icons/HandDrag.vue'
 import PannableImage from '../components/PannableImage.vue'
-import StickiePassword from '../../stickie-password.png'
+import StickiePassword from '/assets/images/stickie-password.png'
 import ErrorSpazzOverlay from '../components/ErrorSpazzOverlay.vue';
-import { playSuccess, playError } from '../helpers/sounds';
+import { playSuccess, playError, playAlert } from '../helpers/sounds';
 
 const { visibleMessages } = useQuestStore()
 
@@ -92,6 +96,7 @@ watch(isImageDownloaded, (newIsImageDownloaded) => {
 });
 
 onMounted(() => {
+    playAlert()
     visibleMessages.value.push('sludge-start');
 });
 
@@ -104,6 +109,20 @@ watch(hasErasedHalf, (newHasErasedHalf) => {
 </script>
 
 <style scoped>
+.invert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    pointer-events: none;
+    filter: invert(0.4) contrast(5);
+    pointer-events: none;
+    mix-blend-mode: difference;
+    background: #fc0052;
+}
+
 .quest3 {
     display: flex;
     flex-direction: column;
@@ -235,11 +254,9 @@ watch(hasErasedHalf, (newHasErasedHalf) => {
 }
 
 .wipe-buttons {
-    width: 100px;
-
     button {
-        font-size: 1.2rem;
-        padding: 1rem;
+        font-size: clamp(0.8rem, 2vw, 1.2rem);
+        padding: clamp(0.75rem, 3vw, 1.5rem) clamp(1rem, 3vw, 2rem);
         border: 1px solid red;
         color: red;
         background: none;
@@ -247,6 +264,5 @@ watch(hasErasedHalf, (newHasErasedHalf) => {
         width: 100%;
         height: 100%;
     }
-
 }
 </style>

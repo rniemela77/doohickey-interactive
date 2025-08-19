@@ -29,6 +29,7 @@ import SliderControl from '../components/SliderControl.vue';
 import { useQuestStore } from '../composables/useQuestStore';
 import CircleMatcher from '../components/CircleMatcher.vue';
 import { useCountdownTimer } from '../composables/useCountdownTimer';
+import { playSuccess } from '../helpers/sounds';
 
 const { visibleMessages } = useQuestStore();
 
@@ -88,6 +89,7 @@ function onBoardEmptied() {
 }
 
 async function onBoardCompleted() {
+    playSuccess();
     visibleMessages.value.push('matching-dots-complete');
     resetTimer();
     await waitMs(2000);
