@@ -1,16 +1,6 @@
 <template>
     <div class="quest3">
         <div class="frosty-screen-container" style="height: 100%;">
-            <div class="border row flex-1">
-                <div style="position: relative; overflow:hidden; height: 100%; min-height: 10rem; width: 100%;">
-                    <button class="download-image-btn" @click="isImageDownloaded = true"
-                        v-if="showImageDownloadButton && !isImageDownloaded">Download Attachment</button>
-
-                    <PannableImage :src="StickiePassword"
-                        :style="{ opacity: isImageDownloaded ? 1 : 0, pointerEvents: isImageDownloaded ? 'auto' : 'none' }" />
-                </div>
-            </div>
-
             <div class="border d-flex align-items-center">
                 <FrostyScreen :canWipe="canWipe" @erasedHalf="setErasedHalf">
                     <div v-if="canWipe" class="control-tip-overlay">
@@ -25,6 +15,16 @@
                             :interactive="isKeypadInteractive" @correct-password="correctPassword" />
                     </div>
                 </FrostyScreen>
+            </div>
+
+            <div class="row flex-1">
+                <div style="position: relative; overflow:hidden; height: 100%; min-height: 10rem; width: 100%;">
+                    <button class="download-image-btn" @click="isImageDownloaded = true"
+                        v-if="!isImageDownloaded">DECRYPT SIGNAL</button>
+
+                    <PannableImage :src="StickiePassword"
+                        :style="{ opacity: isImageDownloaded ? 1 : 0, pointerEvents: isImageDownloaded ? 'auto' : 'none' }" />
+                </div>
             </div>
         </div>
     </div>

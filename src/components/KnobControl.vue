@@ -4,7 +4,7 @@
                 <span>{{ knobLabel }}</span>
 
                 <div class="knob-container">
-                    <div class="knob-value">{{ Math.round(knobValue) }}</div>
+                    <div class="knob-value">{{ displayValue }}</div>
 
                     <div ref="knobEl" class="knob" :class="{ dragging: isDragging }"
                         :style="{ transform: `rotate(${knobDegrees}deg)` }" @pointerdown="onPointerDown">
@@ -16,17 +16,35 @@
     </template>
 
 <script setup>
-import { ref, onBeforeUnmount, computed } from 'vue'
+import { ref, onBeforeUnmount, computed, watch, onMounted } from 'vue'
+
+const props = defineProps({
+    min: {
+        type: Number,
+        required: true
+    },
+    max: {
+        type: Number,
+        required: true
+    },
+    step: {
+        type: Number,
+        required: true
+    },
+    // v-model
+    modelValue: {
+        type: Number,
+        default: undefined
+    }
+})
 
 const knobLabel = ref('Knob')
-const knobDegrees = ref(180) // 0..360 bounded
-const minValue = 0
-const maxValue = 10
-const knobValue = computed(() => (knobDegrees.value / 360) * (maxValue - minValue) + minValue)
-const emit = defineEmits(['update:value'])
+// rotation in degrees, 0..360 bounded
+const knobDegrees = ref(0)
+const emit = defineEmits(['update:modelValue'])
 
 // Tune how fast the knob moves: degrees per pixel
-const sensitivity = ref(0.3) // try 0.6–1.2 to taste
+const sensitivity = ref(1.2) // try 0.6–1.2 to taste
 
 const knobEl = ref(null)
 const isDragging = ref(false)
@@ -70,8 +88,11 @@ const onPointerMove = (e) => {
     if (next > 360) next = 360
     knobDegrees.value = next
 
-    // Emit logical value in 0..10 range as a rounded integer
-    emit('update:value', Math.round(knobValue.value))
+    // Map degrees -> continuous value. Emit raw during drag for smooth feel;
+    // snap to step on pointer up.
+    const raw = degreesToValue(knobDegrees.value)
+    const clamped = clamp(raw, props.min, props.max)
+    emit('update:modelValue', clamped)
 
     lastX = e.clientX
     lastY = e.clientY
@@ -82,12 +103,79 @@ const onPointerUp = (e) => {
     knobEl.value.releasePointerCapture?.(e.pointerId)
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
+
+    // Snap to step on release and sync rotation to snapped value
+    const snapped = clamp(quantizeToStep(degreesToValue(knobDegrees.value)), props.min, props.max)
+    emit('update:modelValue', snapped)
+    knobDegrees.value = valueToDegrees(snapped)
 }
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
 })
+
+// Helpers
+function clamp(value, min, max) {
+    if (value < min) return min
+    if (value > max) return max
+    return value
+}
+
+function valueToDegrees(value) {
+    const span = props.max - props.min
+    if (span <= 0) return 0
+    const ratio = (clamp(value, props.min, props.max) - props.min) / span
+    return ratio * 360
+}
+
+function degreesToValue(degrees) {
+    const span = props.max - props.min
+    const ratio = clamp(degrees, 0, 360) / 360
+    return props.min + ratio * span
+}
+
+function quantizeToStep(value) {
+    const step = props.step > 0 ? props.step : 1
+    const stepsFromMin = Math.round((value - props.min) / step)
+    return props.min + stepsFromMin * step
+}
+
+// Sync initial/internal degrees from external modelValue
+onMounted(() => {
+    const initial = typeof props.modelValue === 'number' ? props.modelValue : props.min
+    const clamped = clamp(quantizeToStep(initial), props.min, props.max)
+    knobDegrees.value = valueToDegrees(clamped)
+    if (initial !== clamped) {
+        emit('update:modelValue', clamped)
+    }
+})
+
+watch(() => props.modelValue, (newValue) => {
+    // Keep rotation smooth while dragging; ignore external snaps
+    if (isDragging.value) return
+    if (typeof newValue !== 'number') return
+    const nextDeg = valueToDegrees(newValue)
+    // Avoid tiny jitter loops by only updating if there's a meaningful change
+    if (Math.abs(nextDeg - knobDegrees.value) > 0.01) {
+        knobDegrees.value = nextDeg
+    }
+})
+
+// Display formatting based on step precision
+const displayValue = computed(() => {
+    const decimals = getStepDecimalPlaces(props.step)
+    const value = typeof props.modelValue === 'number' ? clamp(quantizeToStep(props.modelValue), props.min, props.max) : props.min
+    const valueNum = typeof value === 'number' ? value : Number(value)
+    return valueNum.toFixed(decimals)
+})
+
+function getStepDecimalPlaces(step) {
+    if (!isFinite(step) || step <= 0) return 0
+    const s = step.toString()
+    const dot = s.indexOf('.')
+    return dot === -1 ? 0 : (s.length - dot - 1)
+}
 </script>
 
 <style scoped>

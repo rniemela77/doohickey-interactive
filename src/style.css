@@ -189,6 +189,10 @@ body {
     justify-content: center;
 }
 
+.justify-space-between {
+    justify-content: space-between;
+}
+
 .text-center {
     text-align: center;
 }

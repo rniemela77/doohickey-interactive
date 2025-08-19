@@ -1,17 +1,25 @@
 <template>
-    <div class="pannable-image">
-        <DistortionEffect :freqX="0.02" :freqY="0.015" :scale="50">
-            <img :src="src" width="150px" :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
-                @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
-        </DistortionEffect>
+    <div class="d-flex justify-space-between gap flex-wrap">
+        <div class="d-flex flex-1 border pannable-image">
+            <DistortionEffect :freqX="Math.abs(distortionFreqY) + 0.02" :freqY="Math.abs(distortionFreqY)" :scale="60">
+                <img :src="src" width="150px"
+                    :style="{ transform: imgTransform, cursor: isDragging ? 'grabbing' : 'grab' }"
+                    @mousedown="startDrag" @touchstart="startDrag" @touchmove.prevent draggable="false" />
+            </DistortionEffect>
+        </div>
 
-        <button class="reset-btn" @click="resetImage">RESET</button>
+        <div class="border d-flex column gap">
+            <KnobControl :min="-0.09" :max="0.09" :step="0.01" v-model="distortionFreqY" />
+
+            <button class="reset-btn" @click="resetImage">RESET</button>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
 import DistortionEffect from './DistortionEffect.vue';
+import KnobControl from './KnobControl.vue';
 
 const props = defineProps({
     src: {
@@ -21,12 +29,13 @@ const props = defineProps({
 })
 
 const isDragging = ref(false);
+const distortionFreqY = ref(0.09);
 
 // Image drag-to-pan control
 const imgTranslatePercentX = ref(50);
 const imgTranslatePercentY = ref(0);
 const imgTransform = computed(
-    () => `translateX(${imgTranslatePercentX.value}%) translateY(${imgTranslatePercentY.value}%) scale(2)`
+    () => `translateX(${imgTranslatePercentX.value}%) translateY(${imgTranslatePercentY.value}%) scale(-2.3) rotate(10deg)`
 );
 const dragStartX = ref(0);
 const dragStartY = ref(0);
@@ -92,6 +101,7 @@ const endDrag = () => {
 const resetImage = () => {
     imgTranslatePercentX.value = 50;
     imgTranslatePercentY.value = 0;
+    distortionFreqY.value = 0.09;
 };
 
 onBeforeUnmount(() => {
@@ -103,8 +113,25 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.pannable-image {
+    overflow: hidden;
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: inset 0 0 50px 70px rgba(0, 0, 0, 1);
+        z-index: 1;
+        pointer-events: none;
+    }
+}
+
 img {
-    z-index: 3;
+    z-index: 1;
 }
 
 .reset-btn {
@@ -117,11 +144,8 @@ img {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    z-index: 100;
-    position: absolute;
-    top: 0;
-    left: 0;
     transition: all 0.2s ease;
+    width: 100%;
 
     &:hover {
         background: rgba(255, 255, 255, 0.2);
