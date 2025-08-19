@@ -121,6 +121,7 @@ watch(sliderValue, (value) => {
     transition: all .2s;
     border-radius: 4px;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;/* remove tap highlight  */
 
     &::-webkit-slider-thumb {
         -webkit-appearance: none;

@@ -1,5 +1,5 @@
 <template>
-	<div class="piece" :style="{ background: colorToCss(color) }" :draggable="!disabled" @dragstart="onDragStart">
+	<div class="piece" :style="{ background: colorToCss(color) }">
 		<slot />
 	</div>
 </template>
@@ -9,8 +9,6 @@ const props = defineProps({
 	color: { type: String, required: true },
 	disabled: { type: Boolean, default: false }
 });
-
-const emit = defineEmits(['dragstart']);
 
 const COLOR_TO_HEX = {
 	magenta: '#ff00ff',
@@ -22,10 +20,6 @@ const COLOR_TO_HEX = {
 
 function colorToCss(color) {
 	return COLOR_TO_HEX[color] || '#888888';
-}
-
-function onDragStart(event) {
-	emit('dragstart', event);
 }
 </script>
 
@@ -39,6 +33,7 @@ function onDragStart(event) {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	touch-action: none;
 }
 </style>
 
