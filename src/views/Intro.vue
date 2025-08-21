@@ -131,7 +131,7 @@ setInterval(() => {
 
 
 const handleClick = async (e) => {
-    clickPercentage.value += 20;
+    clickPercentage.value += 50;
     playTap();
     jiggleButton(clickPercentage.value / 100);
 
