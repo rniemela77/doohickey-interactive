@@ -1,7 +1,7 @@
     <template>
         <div class="knob-control">
             <div class="knob-control-label">
-                <span>{{ knobLabel }}</span>
+                <span>{{ label }}</span>
 
                 <div class="knob-container">
                     <div class="knob-value">{{ displayValue }}</div>
@@ -35,10 +35,13 @@ const props = defineProps({
     modelValue: {
         type: Number,
         default: undefined
+    },
+    label: {
+        type: String,
+        default: ''
     }
 })
 
-const knobLabel = ref('Knob')
 // rotation in degrees, 0..360 bounded
 const knobDegrees = ref(0)
 const emit = defineEmits(['update:modelValue'])

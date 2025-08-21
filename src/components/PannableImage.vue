@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex justify-space-between gap flex-wrap">
         <div class="border d-flex column gap">
-            <KnobControl :min="-0.09" :max="0.09" :step="0.01" v-model="distortionFreqY" />
+            <KnobControl :min="-0.09" :max="0.09" :step="0.01" v-model="distortionFreqY" label="DISTORTION"/>
 
             <button class="reset-btn" @click="resetImage">RESET</button>
         </div>
